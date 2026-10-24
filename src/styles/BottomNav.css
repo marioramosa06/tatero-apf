@@ -1,0 +1,53 @@
+.bottom-appbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .bottom-appbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0.5rem 0.6rem max(0.7rem, env(safe-area-inset-bottom));
+    height: 76px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 0.35rem 0.25rem;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .bottom-nav-item:hover,
+  .bottom-nav-item.active {
+    color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  .bottom-nav-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.63rem;
+    letter-spacing: 0.02em;
+  }
+}
