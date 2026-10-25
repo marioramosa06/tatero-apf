@@ -7,6 +7,7 @@ import MonthlyReports from './pages/MonthlyReports'
 import About from './pages/About'
 import SignIn from './pages/SingIn'
 import SignUp from './pages/SignUp'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
           <Route path='/about' element={<About />} />
           <Route path='/signin' element={<SignIn />} />
           <Route path='/signup' element={<SignUp />} />
-
+          <Route path='*' element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>
