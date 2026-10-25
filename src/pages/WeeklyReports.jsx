@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 // import { Link } from "react-router-dom";
 import {
-    // Calendar,
-    // ArrowLeft,
+    CalendarDays,
+    ArrowRight,
     // Coins,
     // Users,
     // Receipt,
@@ -20,6 +20,16 @@ import "../styles/WeeklyReports.css";
 const WeeklyReports = () => {
     const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
     const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0])
+
+    const formatDate = (value) => {
+        if (!value) return "";
+        const [year, month, day] = value.split("-").map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString("fr-FR", {
+            day: "numeric",
+            month: "short",
+            year: "numeric"
+        });
+    };
 
     // Weekly invoices state
     const [invoices, setInvoices] = useState(null);
@@ -110,9 +120,18 @@ const WeeklyReports = () => {
 
                 {/* Week Selector Box */}
                 <section className="week-picker-card">
-                    <div className="picker-info">
+                    <div className="week-picker-heading">
+                        <span className="week-picker-icon">
+                            <CalendarDays aria-hidden="true" />
+                        </span>
                         <div>
-                            <label htmlFor="startDate">Du :</label>
+                            <span className="week-picker-eyebrow">Période du rapport</span>
+                            <h2>Choisir une période</h2>
+                        </div>
+                    </div>
+                    <div className="week-picker-controls">
+                        <div className="week-date-field">
+                            <label htmlFor="startDate">Date de début</label>
                             <input
                                 type="date"
                                 id="startDate"
@@ -120,8 +139,9 @@ const WeeklyReports = () => {
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
                         </div>
-                        <div>
-                            <label htmlFor="endDate">Au :</label>
+                        <ArrowRight className="week-date-separator" aria-hidden="true" />
+                        <div className="week-date-field">
+                            <label htmlFor="endDate">Date de fin</label>
                             <input
                                 type="date"
                                 id="endDate"
@@ -130,10 +150,10 @@ const WeeklyReports = () => {
                             />
                         </div>
                     </div>
-                    {/* <div className="week-range-badge">
-                        <span>Semaine du :</span>
-                        <strong>{`${startDate} au ${endDate}`}</strong>
-                    </div> */}
+                    <div className="week-range-badge">
+                        <span>Période sélectionnée</span>
+                        <strong>{`${formatDate(startDate)} au ${formatDate(endDate)}`}</strong>
+                    </div>
                 </section>
                 {!loading && !invoices && <span className="no-data">Aucun données disponible</span>}
                 {loading && <div className="loader"><Loader className="btn-icon spin" /> <span>Chargement ...</span></div>}

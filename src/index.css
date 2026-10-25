@@ -1,6 +1,8 @@
 @charset "UTF-8";
 
 :root {
+  color-scheme: light;
+
   --primary: #2b3818;
   --primary-hover: #1e2811;
   --primary-soft: #edf4df;
@@ -23,6 +25,12 @@
   --text-main: #1d2a17;
   --text-muted: #586a4b;
   --card-bg: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.9);
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --nav-border: rgba(223, 231, 216, 0.9);
+  --bg-glow: rgba(154, 195, 67, 0.18);
+  --bg-gradient-start: #f9faf6;
+  --table-row-hover: rgba(237, 241, 232, 0.75);
 
   --shadow-sm: 0 8px 24px rgba(26, 34, 22, 0.06);
   --shadow-hover: 0 18px 36px rgba(26, 34, 22, 0.12);
@@ -30,6 +38,52 @@
   --radius-lg: 22px;
   --radius-md: 16px;
   --radius-sm: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --primary: #b5d77c;
+    --primary-hover: #a2c567;
+    --primary-soft: rgba(154, 195, 67, 0.16);
+    --secondary: #ff9475;
+    --secondary-hover: #ffad94;
+    --tertiary: #6bd4d0;
+    --tertiary-soft: rgba(82, 189, 186, 0.14);
+
+    --error-bg: #351d1d;
+    --error-border: #703737;
+    --error-text: #ffc1c1;
+    --success-bg: #183022;
+    --success-border: #2e6244;
+    --success-text: #a5edbd;
+
+    --bg-color: #11160f;
+    --bg-muted: #1b2418;
+    --border-color: #303b2b;
+    --text-main: #edf3e6;
+    --text-muted: #b2c0a4;
+    --card-bg: #1a2117;
+    --surface-glass: rgba(26, 33, 23, 0.94);
+    --nav-bg: rgba(26, 33, 23, 0.92);
+    --nav-border: rgba(48, 59, 43, 0.9);
+    --bg-glow: rgba(154, 195, 67, 0.08);
+    --bg-gradient-start: #151b12;
+    --table-row-hover: rgba(237, 241, 232, 0.06);
+
+    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --shadow-hover: 0 18px 36px rgba(0, 0, 0, 0.32);
+  }
+
+  .submit-btn {
+    color: #17200f;
+  }
+
+  .card-primary:hover .card-icon-wrapper,
+  .contact-dev-btn:hover {
+    color: #17200f;
+  }
 }
 
 * {
@@ -50,10 +104,10 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      rgba(154, 195, 67, 0.18),
+      var(--bg-glow),
       transparent 26%
     ),
-    linear-gradient(180deg, #f9faf6 0%, var(--bg-color) 100%);
+    linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-color) 100%);
   color: var(--text-main);
   line-height: 1.6;
 }

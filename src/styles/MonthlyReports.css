@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-glass);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.1rem 1rem;
@@ -101,7 +101,7 @@
 }
 
 .monthly-table tr:hover {
-  background: rgba(237, 241, 232, 0.75);
+  background: var(--table-row-hover);
 }
 
 .has-comment-badge {
