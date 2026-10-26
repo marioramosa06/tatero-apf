@@ -1,13 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
-    Calendar,
-    ArrowLeft,
-    Coins,
-    Users,
-    Receipt,
-    Calculator,
-    TrendingUp,
     Eye,
     Edit3,
     X,
@@ -61,6 +53,7 @@ const MonthlyReports = () => {
     const today = new Date();
     const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+    const [loading, setLoading] = useState(true);
 
     // Invoices list for the selected month
     const [invoices, setInvoices] = useState(() => generateMockMonthlyInvoices(defaultMonth));
@@ -70,11 +63,20 @@ const MonthlyReports = () => {
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
 
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setInvoices(generateMockMonthlyInvoices(selectedMonth));
+            setLoading(false);
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [selectedMonth]);
+
     // Handle month selection change
     const handleMonthChange = (e) => {
         const newMonth = e.target.value;
         setSelectedMonth(newMonth);
-        setInvoices(generateMockMonthlyInvoices(newMonth));
+        setLoading(true);
     };
 
     // Calculate aggregated metrics
@@ -178,45 +180,54 @@ const MonthlyReports = () => {
 
             {/* Monthly Summary Grid */}
             <section className="summary-grid monthly-summary">
-                <div className="summary-card card-primary">
-                    {/* <div className="summary-icon-box"><Coins className="summary-icon" /></div> */}
-                    <div className="summary-content">
-                        <span className="summary-label">Montant Total</span>
-                        <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
+                {loading ? (
+                    <div className="monthly-summary-skeleton" role="status" aria-label="Chargement du rapport mensuel">
+                        <span className="sr-only">Chargement du rapport mensuel...</span>
+                        {[1, 2, 3, 4, 5].map((item) => (
+                            <div className="summary-card skeleton-card" key={item} aria-hidden="true">
+                                <span className="skeleton-line skeleton-label" />
+                                <span className="skeleton-line skeleton-value" />
+                            </div>
+                        ))}
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <div className="summary-card card-primary">
+                            <div className="summary-content">
+                                <span className="summary-label">Montant Total</span>
+                                <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
+                            </div>
+                        </div>
 
-                <div className="summary-card card-secondary">
-                    {/* <div className="summary-icon-box"><Users className="summary-icon" /></div> */}
-                    <div className="summary-content">
-                        <span className="summary-label">Patients du Mois</span>
-                        <h3 className="summary-value">{totalPatients}</h3>
-                    </div>
-                </div>
+                        <div className="summary-card card-secondary">
+                            <div className="summary-content">
+                                <span className="summary-label">Patients du Mois</span>
+                                <h3 className="summary-value">{totalPatients}</h3>
+                            </div>
+                        </div>
 
-                <div className="summary-card card-tertiary">
-                    {/* <div className="summary-icon-box"><Receipt className="summary-icon" /></div> */}
-                    <div className="summary-content">
-                        <span className="summary-label">Total Ordonnances</span>
-                        <h3 className="summary-value">{totalOrdonnances}</h3>
-                    </div>
-                </div>
+                        <div className="summary-card card-tertiary">
+                            <div className="summary-content">
+                                <span className="summary-label">Total Ordonnances</span>
+                                <h3 className="summary-value">{totalOrdonnances}</h3>
+                            </div>
+                        </div>
 
-                <div className="summary-card card-info">
-                    {/* <div className="summary-icon-box"><TrendingUp className="summary-icon" /></div> */}
-                    <div className="summary-content">
-                        <span className="summary-label">Moyenne / Jour</span>
-                        <h3 className="summary-value">{Number(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
-                    </div>
-                </div>
+                        <div className="summary-card card-info">
+                            <div className="summary-content">
+                                <span className="summary-label">Moyenne / Jour</span>
+                                <h3 className="summary-value">{Number(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
+                            </div>
+                        </div>
 
-                <div className="summary-card card-primary full-span-mobile">
-                    {/* <div className="summary-icon-box"><Calculator className="summary-icon" /></div> */}
-                    <div className="summary-content">
-                        <span className="summary-label">Coût Moyen / Patient</span>
-                        <h3 className="summary-value">{overallAvgCost} Ar</h3>
-                    </div>
-                </div>
+                        <div className="summary-card card-primary full-span-mobile">
+                            <div className="summary-content">
+                                <span className="summary-label">Coût Moyen / Patient</span>
+                                <h3 className="summary-value">{overallAvgCost} Ar</h3>
+                            </div>
+                        </div>
+                    </>
+                )}
             </section>
 
             {/* Monthly Invoices Table */}
@@ -224,7 +235,9 @@ const MonthlyReports = () => {
                 <div className="table-header">
                     <h2>
                         Historique des factures de <span className="month-capitalize">{getFormattedMonthTitle()}</span>
-                        <span className="count-pill">{invoices.length} jours facturés</span>
+                        {loading
+                            ? <span className="skeleton-line skeleton-count" aria-hidden="true" />
+                            : <span className="count-pill">{invoices.length} jours facturés</span>}
                     </h2>
                 </div>
 
@@ -243,7 +256,15 @@ const MonthlyReports = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {invoices.map((inv) => (
+                            {loading
+                                ? [1, 2, 3, 4, 5].map((row) => (
+                                    <tr key={row} aria-hidden="true">
+                                        {[1, 2, 3, 4, 5, 6, 7].map((cell) => (
+                                            <td key={cell}><span className="skeleton-line skeleton-cell" /></td>
+                                        ))}
+                                    </tr>
+                                ))
+                                : invoices.map((inv) => (
                                 <tr key={inv.id}>
                                     <td className="date-cell">{formatDateFr(inv.date)}</td>
                                     <td className="day-cell"><strong>{inv.dayName}</strong></td>

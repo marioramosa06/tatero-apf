@@ -11,7 +11,6 @@ import {
     // Edit3,
     X,
     Check,
-    Loader,
     DatabaseXIcon,
     // FileText,
     // Download
@@ -50,6 +49,13 @@ const WeeklyReports = () => {
     const [loading, setLoading] = useState(true)
     //error
     const [error, setError] = useState(null);
+
+    const handleDateChange = (setter) => (e) => {
+        setter(e.target.value);
+        setLoading(true);
+        setError(null);
+        setInvoices(null);
+    };
 
     // Open View / Edit Modal
     const handleOpenModal = (invoice, mode) => {
@@ -100,10 +106,8 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
-        // setLoading(true)
         fetch(`http://192.168.1.3:8000/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
             .then(res => {
-                setLoading(true)
                 return res.json()
             })
             .then(dat => {
@@ -159,7 +163,7 @@ const WeeklyReports = () => {
                                 type="date"
                                 id="startDate"
                                 value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                                onChange={handleDateChange(setStartDate)}
                             />
                         </div>
                         <ArrowRight className="week-date-separator" aria-hidden="true" />
@@ -169,7 +173,7 @@ const WeeklyReports = () => {
                                 type="date"
                                 id="endDate"
                                 value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                                onChange={handleDateChange(setEndDate)}
                             />
                         </div>
                     </div>
@@ -178,11 +182,48 @@ const WeeklyReports = () => {
                         <strong>{`${formatDate(startDate)} au ${formatDate(endDate)}`}</strong>
                     </div>
                 </section>
-                {!loading && !invoices && <div className="no-data"> <DatabaseXIcon /> <span>Aucun données disponible</span> </div>}
-                {loading && <div className="loader"><Loader className="btn-icon spin" /> <span>Chargement ...</span></div>}
+                {loading && (
+                    <div className="weekly-report-skeleton" role="status" aria-label="Chargement du rapport hebdomadaire">
+                        <span className="sr-only">Chargement du rapport hebdomadaire...</span>
+                        <section className="summary-grid" aria-hidden="true">
+                            {[1, 2, 3, 4].map((item) => (
+                                <div className="summary-card skeleton-card" key={item}>
+                                    <span className="skeleton-line skeleton-label" />
+                                    <span className="skeleton-line skeleton-value" />
+                                </div>
+                            ))}
+                        </section>
+                        <section className="table-card" aria-hidden="true">
+                            <div className="table-header">
+                                <span className="skeleton-line skeleton-heading" />
+                            </div>
+                            <div className="table-responsive">
+                                <table className="weekly-table">
+                                    <thead>
+                                        <tr>
+                                            {["Date", "Patients", "Ordonnances", "Montant Total", "Coût Moyen"].map((heading) => (
+                                                <th key={heading}>{heading}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {[1, 2, 3, 4, 5].map((row) => (
+                                            <tr key={row}>
+                                                {[1, 2, 3, 4, 5].map((cell) => (
+                                                    <td key={cell}><span className="skeleton-line skeleton-cell" /></td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                )}
+                {!loading && !error && !invoices && <div className="no-data"> <DatabaseXIcon /> <span>Aucun données disponible</span> </div>}
                 {error && <div className="alert error">{error}</div>}
 
-                {invoices &&
+                {!loading && invoices &&
                     <>
                         {/* Weekly Summary Cards */}
                         <section className="summary-grid">
@@ -271,7 +312,6 @@ const WeeklyReports = () => {
                                         ))}
                                     </tbody>
                                 </table>
-                                {loading && <div><Loader /> Chargement ...</div>}
                             </div>
                         </main>
 

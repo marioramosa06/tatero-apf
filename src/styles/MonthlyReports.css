@@ -64,6 +64,72 @@
   text-transform: capitalize;
 }
 
+.monthly-summary-skeleton {
+  display: contents;
+}
+
+.skeleton-card {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 88px;
+}
+
+.skeleton-line {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 25%,
+    var(--border-color) 50%,
+    var(--bg-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-label {
+  width: 48%;
+  height: 0.65rem;
+}
+
+.skeleton-value {
+  width: 72%;
+  height: 1.25rem;
+}
+
+.skeleton-count {
+  display: inline-block;
+  width: 7.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+}
+
+.skeleton-cell {
+  width: 76%;
+  height: 0.8rem;
+  margin-inline: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 .count-pill {
   display: inline-block;
   margin-left: 0.6rem;
