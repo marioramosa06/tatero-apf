@@ -12,6 +12,7 @@ import {
     X,
     Check,
     Loader,
+    DatabaseXIcon,
     // FileText,
     // Download
 } from "lucide-react";
@@ -155,7 +156,7 @@ const WeeklyReports = () => {
                         <strong>{`${formatDate(startDate)} au ${formatDate(endDate)}`}</strong>
                     </div>
                 </section>
-                {!loading && !invoices && <span className="no-data">Aucun données disponible</span>}
+                {!loading && !invoices && <div className="no-data"> <DatabaseXIcon /> <span>Aucun données disponible</span> </div>}
                 {loading && <div className="loader"><Loader className="btn-icon spin" /> <span>Chargement ...</span></div>}
                 {error && <div className="alert error">{error}</div>}
 
