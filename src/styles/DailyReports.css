@@ -31,7 +31,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--bg-muted);
   color: var(--primary);
   border: 1px solid var(--border-color);
@@ -77,13 +77,51 @@
   gap: 0.5rem;
 }
 
-.form-group label {
+.form-group label,
+.form-group-label {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-main);
+}
+
+.gender-chip-group {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.gender-chip {
+  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  background: var(--bg-muted);
+  color: var(--text-main);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.gender-chip:hover {
+  border-color: var(--primary);
+}
+
+.gender-chip.selected {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.gender-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(82, 197, 193, 0.2);
 }
 
 .full-width {
