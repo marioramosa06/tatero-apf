@@ -38,44 +38,45 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsPending(true);
         setError(null);
         setSuccess(null);
 
         // Client-side validation
 
-        if (formData.name === "") {
+        if (!formData.name.trim()) {
             setError("Veuillez saisir votre nom complet.");
-            setIsPending(false);
             return;
         }
         if (formData.gender === "") {
             setError("Veuillez selectionner votre genre.");
-            setIsPending(false);
             return;
         }
 
-        if (formData.email === "") {
+        if (!formData.email.trim()) {
             setError("Veuillez saisir adresse email.");
-            setIsPending(false);
             return;
         }
-        if (formData.workAt === "") {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+            setError("Veuillez saisir une adresse email valide.");
+            return;
+        }
+        if (!formData.workAt.trim()) {
             setError("Veuillez preciser votre lieu de travail.");
-            setIsPending(false);
             return;
         }
 
-        if (formData.password === "") {
+        if (!formData.password) {
             setError("Veuillez entrer votre nouveau mot de passe.");
-            setIsPending(false);
+            return;
+        } else if (formData.password.length < 6) {
+            setError("Votre mot de passe doit contenir au moins 6 caractères.");
             return;
         } else if (formData.password !== formData.confirmPassword) {
             setError("Les mots de passe ne correspondent pas.");
-            setIsPending(false);
             return;
         }
 
+        setIsPending(true);
         try {
             const response = await fetch("http://192.168.1.3:8000/api/users/signup", {
                 method: "POST",
@@ -124,7 +125,7 @@ const SignUp = () => {
             </header>
 
             <main className="form-card">
-                <form className="report-form" onSubmit={handleSubmit}>
+                <form className="report-form" onSubmit={handleSubmit} noValidate>
                     <div className="form-grid">
                         {/* Nom complet */}
                         <div className="form-group">

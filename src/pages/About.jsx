@@ -20,6 +20,7 @@ import Footer from "../components/Footer";
 const About = () => {
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [contactSubmitted, setContactSubmitted] = useState(false);
+    const [contactError, setContactError] = useState(null);
     const [contactForm, setContactForm] = useState({
         name: "",
         email: "",
@@ -29,12 +30,43 @@ const About = () => {
 
     const handleContactSubmit = (e) => {
         e.preventDefault();
+        setContactError(null);
+        if (!contactForm.name.trim()) {
+            setContactError("Veuillez saisir votre nom.");
+            return;
+        }
+        if (!contactForm.email.trim()) {
+            setContactError("Veuillez saisir votre adresse email.");
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email.trim())) {
+            setContactError("Veuillez saisir une adresse email valide.");
+            return;
+        }
+        if (!contactForm.subject.trim()) {
+            setContactError("Veuillez saisir un sujet.");
+            return;
+        }
+        if (!contactForm.message.trim()) {
+            setContactError("Veuillez saisir votre message.");
+            return;
+        }
         setContactSubmitted(true);
         setTimeout(() => {
             setContactSubmitted(false);
             setIsContactOpen(false);
             setContactForm({ name: "", email: "", subject: "Message pour Tatero", message: "" });
         }, 2000);
+    };
+
+    const openContactModal = () => {
+        setContactError(null);
+        setIsContactOpen(true);
+    };
+
+    const closeContactModal = () => {
+        setContactError(null);
+        setIsContactOpen(false);
     };
 
     return (
@@ -111,7 +143,7 @@ const About = () => {
                         </div>
                         <button
                             className="contact-dev-btn"
-                            onClick={() => setIsContactOpen(true)}
+                            onClick={openContactModal}
                         >
                             <Mail size={16} /> Me contacter
                         </button>
@@ -122,14 +154,14 @@ const About = () => {
 
             {/* Contact Developer Modal */}
             {isContactOpen && (
-                <div className="modal-backdrop" onClick={() => setIsContactOpen(false)}>
+                <div className="modal-backdrop" onClick={closeContactModal}>
                     <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>
                                 {/* <MessageSquare className="field-icon" />  */}
                                 Envoyer un message à Mario
                             </h3>
-                            <button className="close-btn" onClick={() => setIsContactOpen(false)}>
+                            <button className="close-btn" onClick={closeContactModal}>
                                 <X size={20} />
                             </button>
                         </div>
@@ -143,7 +175,7 @@ const About = () => {
                                 <p>Merci pour votre message. Je vous répondrai avec plaisir dès que possible.</p>
                             </div>
                         ) : (
-                            <form onSubmit={handleContactSubmit} className="modal-body">
+                            <form onSubmit={handleContactSubmit} className="modal-body" noValidate>
                                 <div className="form-grid">
                                     <div className="form-group">
                                         <label>Votre nom :</label>
@@ -152,7 +184,6 @@ const About = () => {
                                             placeholder="ex: Alex"
                                             value={contactForm.name}
                                             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                                            required
                                         />
                                     </div>
 
@@ -163,7 +194,6 @@ const About = () => {
                                             placeholder="exemple@domaine.com"
                                             value={contactForm.email}
                                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                                            required
                                         />
                                     </div>
 
@@ -173,7 +203,6 @@ const About = () => {
                                             type="text"
                                             value={contactForm.subject}
                                             onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                                            required
                                         />
                                     </div>
 
@@ -184,16 +213,17 @@ const About = () => {
                                             placeholder="Une idée d'amélioration, une question ou simplement un mot d'encouragement..."
                                             value={contactForm.message}
                                             onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                                            required
                                         ></textarea>
                                     </div>
                                 </div>
+
+                                {contactError && <div className="alert error" role="alert">{contactError}</div>}
 
                                 <div className="modal-actions">
                                     <button
                                         type="button"
                                         className="btn-secondary"
-                                        onClick={() => setIsContactOpen(false)}
+                                        onClick={closeContactModal}
                                     >
                                         Annuler
                                     </button>

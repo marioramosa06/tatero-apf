@@ -49,9 +49,31 @@ const DailyReports = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsPending(true)
         setError(null)
         setSuccess(null)
+
+        if (!formData.date) {
+            setError("Veuillez sélectionner une date.");
+            return;
+        }
+        if (formData.nbP === "" || !Number.isInteger(Number(formData.nbP)) || Number(formData.nbP) < 0) {
+            setError("Veuillez saisir un nombre de patients valide.");
+            return;
+        }
+        if (formData.nbOf === "" || !Number.isInteger(Number(formData.nbOf)) || Number(formData.nbOf) < 0) {
+            setError("Veuillez saisir un nombre d'ordonnances valide.");
+            return;
+        }
+        if (formData.amount === "" || !Number.isFinite(Number(formData.amount)) || Number(formData.amount) < 0) {
+            setError("Veuillez saisir un montant valide.");
+            return;
+        }
+        if (showCommentField && !formData.comment.trim()) {
+            setError("Veuillez justifier le coût moyen supérieur à 3 500 Ar.");
+            return;
+        }
+
+        setIsPending(true)
         const submissionData = {
             ...formData,
             averageCost: calculateAverageCost(),
@@ -107,7 +129,7 @@ const DailyReports = () => {
                 <main className="form-card">
 
 
-                    <form className="report-form" onSubmit={handleSubmit}>
+                    <form className="report-form" onSubmit={handleSubmit} noValidate>
                         <div className="form-grid">
                             {/* Date */}
                             <div className="form-group">
@@ -121,7 +143,6 @@ const DailyReports = () => {
                                     name="date"
                                     value={formData.date}
                                     onChange={handleChange}
-                                    required
                                 />
                             </div>
 
@@ -139,7 +160,6 @@ const DailyReports = () => {
                                     placeholder="ex: 25"
                                     value={formData.nbP}
                                     onChange={handleChange}
-                                    required
                                 />
                             </div>
 
@@ -157,7 +177,6 @@ const DailyReports = () => {
                                     placeholder="ex: 20"
                                     value={formData.nbOf}
                                     onChange={handleChange}
-                                    required
                                 />
                             </div>
 
@@ -176,7 +195,6 @@ const DailyReports = () => {
                                     placeholder="ex: 150000"
                                     value={formData.amount}
                                     onChange={handleChange}
-                                    required
                                 />
                             </div>
 
@@ -212,7 +230,6 @@ const DailyReports = () => {
                                     placeholder={`${showCommentField ? "Veuillez justifier ce coût moyen élevé..." : "Ajouter un commentaire si necessaire..."}`}
                                     value={formData.comment}
                                     onChange={handleChange}
-                                    required={showCommentField}
                                 ></textarea>
                             </div>
 

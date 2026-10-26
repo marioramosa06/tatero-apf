@@ -68,6 +68,7 @@ const MonthlyReports = () => {
     // Modal state
     const [activeModal, setActiveModal] = useState(null); // { mode: 'view' | 'edit', invoice: obj }
     const [modalFormData, setModalFormData] = useState(null);
+    const [modalError, setModalError] = useState(null);
 
     // Handle month selection change
     const handleMonthChange = (e) => {
@@ -95,16 +96,37 @@ const MonthlyReports = () => {
     const handleOpenModal = (invoice, mode) => {
         setActiveModal({ mode, invoice });
         setModalFormData({ ...invoice });
+        setModalError(null);
     };
 
     const handleCloseModal = () => {
         setActiveModal(null);
         setModalFormData(null);
+        setModalError(null);
     };
 
     // Save edited invoice
     const handleModalSubmit = (e) => {
         e.preventDefault();
+        setModalError(null);
+        if (!modalFormData || activeModal?.mode !== "edit") return;
+        if (modalFormData.nbP === "" || !Number.isInteger(Number(modalFormData.nbP)) || Number(modalFormData.nbP) < 0) {
+            setModalError("Veuillez saisir un nombre de patients valide.");
+            return;
+        }
+        if (modalFormData.nbOf === "" || !Number.isInteger(Number(modalFormData.nbOf)) || Number(modalFormData.nbOf) < 0) {
+            setModalError("Veuillez saisir un nombre d'ordonnances valide.");
+            return;
+        }
+        if (modalFormData.amount === "" || !Number.isFinite(Number(modalFormData.amount)) || Number(modalFormData.amount) < 0) {
+            setModalError("Veuillez saisir un montant valide.");
+            return;
+        }
+        if (Number(modalFormData.amount) / (Number(modalFormData.nbP) || 1) > 3500 && !modalFormData.comment?.trim()) {
+            setModalError("Veuillez saisir un commentaire pour ce coût moyen supérieur à 3 500 Ar.");
+            return;
+        }
+
         const updatedAvg = modalFormData.nbP > 0
             ? (modalFormData.amount / modalFormData.nbP).toFixed(2)
             : "0.00";
@@ -275,7 +297,7 @@ const MonthlyReports = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleModalSubmit} className="modal-body">
+                        <form onSubmit={handleModalSubmit} className="modal-body" noValidate>
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label>Jour & Date :</label>
@@ -288,8 +310,10 @@ const MonthlyReports = () => {
                                         type="number"
                                         value={modalFormData.nbP}
                                         disabled={activeModal.mode === "view"}
-                                        onChange={(e) => setModalFormData({ ...modalFormData, nbP: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setModalError(null);
+                                            setModalFormData({ ...modalFormData, nbP: e.target.value });
+                                        }}
                                     />
                                 </div>
 
@@ -299,8 +323,10 @@ const MonthlyReports = () => {
                                         type="number"
                                         value={modalFormData.nbOf}
                                         disabled={activeModal.mode === "view"}
-                                        onChange={(e) => setModalFormData({ ...modalFormData, nbOf: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setModalError(null);
+                                            setModalFormData({ ...modalFormData, nbOf: e.target.value });
+                                        }}
                                     />
                                 </div>
 
@@ -311,10 +337,14 @@ const MonthlyReports = () => {
                                         step="0.01"
                                         value={modalFormData.amount}
                                         disabled={activeModal.mode === "view"}
-                                        onChange={(e) => setModalFormData({ ...modalFormData, amount: e.target.value })}
-                                        required
+                                        onChange={(e) => {
+                                            setModalError(null);
+                                            setModalFormData({ ...modalFormData, amount: e.target.value });
+                                        }}
                                     />
                                 </div>
+
+                                {modalError && <div className="alert error full-width" role="alert">{modalError}</div>}
 
                                 {parseFloat(modalFormData.amount / (modalFormData.nbP || 1)) > 3500 && (
                                     <div className="form-group full-width">
@@ -323,7 +353,10 @@ const MonthlyReports = () => {
                                             rows="3"
                                             value={modalFormData.comment}
                                             disabled={activeModal.mode === "view"}
-                                            onChange={(e) => setModalFormData({ ...modalFormData, comment: e.target.value })}
+                                            onChange={(e) => {
+                                                setModalError(null);
+                                                setModalFormData({ ...modalFormData, comment: e.target.value });
+                                            }}
                                         ></textarea>
                                     </div>
                                 )}

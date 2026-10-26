@@ -31,10 +31,19 @@ const SignIn = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsPending(true);
         setError(null);
         setSuccess(null);
 
+        if (!formData.email.trim() || !formData.password) {
+            setError("Veuillez saisir votre adresse email et votre mot de passe.");
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+            setError("Veuillez saisir une adresse email valide.");
+            return;
+        }
+
+        setIsPending(true);
         try {
             const response = await fetch("http://localhost:3000/api/auth/signin", {
                 method: "POST",
@@ -80,7 +89,7 @@ const SignIn = () => {
             </header>
 
             <main className="form-card">
-                <form className="report-form" onSubmit={handleSubmit}>
+                <form className="report-form" onSubmit={handleSubmit} noValidate>
                     <div className="form-grid">
                         {/* Email */}
                         <div className="form-group full-width">
@@ -95,7 +104,6 @@ const SignIn = () => {
                                 placeholder="exemple@domaine.com"
                                 value={formData.email}
                                 onChange={handleChange}
-                                required
                             />
                         </div>
 
@@ -112,7 +120,6 @@ const SignIn = () => {
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
-                                required
                             />
                         </div>
                     </div>
