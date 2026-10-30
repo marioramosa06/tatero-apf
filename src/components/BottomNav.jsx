@@ -4,7 +4,8 @@ import {
     FilePlus,
     CalendarDays,
     BarChart3,
-    Info
+    Info,
+    CircleUserRound
 } from "lucide-react";
 import "../styles/BottomNav.css";
 
@@ -31,10 +32,15 @@ const BottomNav = () => {
                 <span className="bottom-nav-label">Mois</span>
             </NavLink>
 
-            <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            <NavLink to="/profile" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+                <CircleUserRound className="bottom-nav-icon" />
+                <span className="bottom-nav-label">Profil</span>
+            </NavLink>
+
+            {/* <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <Info className="bottom-nav-icon" />
                 <span className="bottom-nav-label">À propos</span>
-            </NavLink>
+            </NavLink> */}
         </nav>
     );
 };

@@ -1,11 +1,6 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
-    Home,
-    FilePlus,
-    CalendarDays,
-    BarChart3,
-    Info,
-    ArrowLeft
+    CircleUserRound
 } from "lucide-react";
 import "../styles/NavBar.css";
 
@@ -57,10 +52,15 @@ const Navbar = () => {
                         <span>Mensuel</span>
                     </NavLink>
 
-                    <NavLink to="/about" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        {/* <Info className="nav-icon" /> */}
-                        <span>À propos</span>
+                    <NavLink to="/profile" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <CircleUserRound className="nav-icon" />
+                        <span>Profil</span>
                     </NavLink>
+
+                    {/* <NavLink to="/about" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}> */}
+                    {/* <Info className="nav-icon" /> */}
+                    {/* <span>À propos</span> */}
+                    {/* </NavLink> */}
                 </nav>
             </div>
         </header>

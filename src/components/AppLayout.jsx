@@ -9,6 +9,7 @@ const AppLayout = () => {
         "/invoices/new",
         "/reports/week",
         "/reports/month",
+        "/profile",
         "/about"
 
     ];

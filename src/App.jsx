@@ -7,6 +7,7 @@ import MonthlyReports from './pages/MonthlyReports'
 import About from './pages/About'
 import SignIn from './pages/SingIn'
 import SignUp from './pages/SignUp'
+import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './contexts/AuthContext'
@@ -21,6 +22,7 @@ function App() {
             <Route path='/invoices/new' element={<ProtectedRoute><DailyReports /></ProtectedRoute>} />
             <Route path='/reports/week' element={<ProtectedRoute><WeeklyReports /></ProtectedRoute>} />
             <Route path='/reports/month' element={<ProtectedRoute><MonthlyReports /></ProtectedRoute>} />
+            <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path='/about' element={<About />} />
             <Route path='/signin' element={<SignIn />} />
             <Route path='/signup' element={<SignUp />} />
