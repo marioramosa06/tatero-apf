@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getAuthHeaders } from "../utils/authHeaders";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import {
@@ -17,7 +18,7 @@ import Footer from "../components/Footer";
 
 
 const DailyReports = () => {
-    const { user } = useAuth()
+    const { user, token } = useAuth()
 
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(null)
@@ -90,7 +91,10 @@ const DailyReports = () => {
         // console.log("Facture journalière soumise :", submissionData);
         // Add your API call / submit logic here
         fetch("https://api-tatero-apf.vercel.app/api/invoices", {
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeaders(token)
+            },
             method: "POST",
             body: JSON.stringify(submissionData)
         })

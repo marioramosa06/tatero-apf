@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getAuthHeaders } from "../utils/authHeaders";
 import { Link } from "react-router-dom";
 import {
     CalendarDays,
@@ -10,8 +11,10 @@ import {
     Download
 } from "lucide-react";
 import "../styles/WeeklyReports.css";
+import useAuth from "../hooks/useAuth";
 
 const WeeklyReports = () => {
+    const { user, token } = useAuth()
     const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
     const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0])
 
@@ -100,7 +103,13 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
-        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
+        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
+            {
+                headers: {
+                    ...getAuthHeaders(token)
+                }
+            }
+        )
             .then(async (res) => {
                 const data = await res.json();
                 if (!res.ok) {
