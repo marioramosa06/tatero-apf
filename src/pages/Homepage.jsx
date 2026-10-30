@@ -42,7 +42,7 @@ const Homepage = () => {
                 </p>
             </header>
             <main className="homepage-grid">
-                <Link to="/invoices/day/new" className="homepage-card card-primary">
+                <Link to="/invoices/new" className="homepage-card card-primary">
                     <div className="card-icon-wrapper">
                         <FilePlus className="card-icon" />
                     </div>
@@ -55,7 +55,7 @@ const Homepage = () => {
                     </span>
                 </Link>
 
-                <Link to="/invoices/week" className="homepage-card card-primary">
+                <Link to="/reports/week" className="homepage-card card-primary">
                     <div className="card-icon-wrapper">
                         <CalendarDays className="card-icon" />
                     </div>
@@ -68,7 +68,7 @@ const Homepage = () => {
                     </span>
                 </Link>
 
-                <Link to="/invoices/month" className="homepage-card card-primary">
+                <Link to="/reports/month" className="homepage-card card-primary">
                     <div className="card-icon-wrapper">
                         <BarChart3 className="card-icon" />
                     </div>

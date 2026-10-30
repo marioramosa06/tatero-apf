@@ -9,9 +9,11 @@ import {
 } from "lucide-react";
 import "../styles/DailyReports.css"; // Reuses shared form styles
 import Footer from "../components/Footer";
+import useAuth from "../hooks/useAuth";
 
 const SignIn = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isPending, setIsPending] = useState(false);
@@ -45,7 +47,7 @@ const SignIn = () => {
 
         setIsPending(true);
         try {
-            const response = await fetch("http://localhost:3000/api/auth/signin", {
+            const response = await fetch("http://localhost:8000/api/auth/signin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
@@ -53,18 +55,18 @@ const SignIn = () => {
 
             const data = await response.json();
 
-            if (!response.ok || data.error) {
-                throw new Error(data.error || "Identifiants invalides.");
+            if (!response.ok || data?.hasError) {
+                throw new Error(data?.message || "Identifiants invalides.");
             }
-
-            // Save token / user data if present
-            if (data.token) {
-                localStorage.setItem("token", data.token);
+            if (!data.token) {
+                throw new Error("La réponse du serveur ne contient pas de jeton de connexion.");
             }
+            login(data.token, data.user);
 
             setSuccess("Connexion réussie ! Redirection...");
+
             setTimeout(() => {
-                navigate("/");
+                navigate("/invoices/new");
             }, 1500);
         } catch (err) {
             setError(err.message || "Une erreur s'est produite lors de la connexion.");
@@ -83,7 +85,7 @@ const SignIn = () => {
                     <span className="report-badge">Espace Utilisateur</span>
                     <h1 className="report-title">Connexion</h1>
                     <p className="report-subtitle">
-                        Connectez-vous à votre compte Tatero pour gérer vos factures.
+                        Connectez-vous à votre compte pour gérer vos factures.
                     </p>
                 </div>
             </header>

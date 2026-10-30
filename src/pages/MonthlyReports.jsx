@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom"
 import {
     Eye,
     Edit3,
     X,
     Check,
-    FileText
+    FileText,
+    CalendarDays,
+    ArrowLeft
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
@@ -146,9 +149,9 @@ const MonthlyReports = () => {
         <div className="report-container">
             {/* Header */}
             <header className="report-header">
-                {/* <Link to="/" className="back-link">
+                <Link to="/" className="back-link">
                     <ArrowLeft className="back-icon" /> Retour à l'accueil
-                </Link> */}
+                </Link>
                 <div className="header-title-wrapper">
                     <span className="report-badge">Récap Mensuel</span>
                     <h1 className="report-title">Facture du Mois</h1>
@@ -159,23 +162,32 @@ const MonthlyReports = () => {
             </header>
 
             {/* Month Picker Box */}
-            <section className="month-picker-card">
-                <div className="picker-info">
-                    {/* <Calendar className="picker-icon" /> */}
+            <section className="monthly-picker-card" aria-label="Sélection de la période">
+                <div className="monthly-picker-heading">
+                    <span className="monthly-picker-icon" aria-hidden="true">
+                        <CalendarDays />
+                    </span>
                     <div>
-                        <label htmlFor="monthSelect">Sélectionner un mois :</label>
-                        <input
-                            type="month"
-                            id="monthSelect"
-                            value={selectedMonth}
-                            onChange={handleMonthChange}
-                        />
+                        <span className="monthly-picker-eyebrow">Période du rapport</span>
+                        <p>Choisissez le mois à consulter</p>
                     </div>
                 </div>
-                <div className="month-display-badge">
-                    <span>Période :</span>
-                    <strong className="month-capitalize">{getFormattedMonthTitle()}</strong>
+                <div className="monthly-picker-control">
+                    <label htmlFor="monthSelect">Mois sélectionné</label>
+                    <input
+                        type="month"
+                        id="monthSelect"
+                        value={selectedMonth}
+                        onChange={handleMonthChange}
+                    />
                 </div>
+                {/* <div className="month-display-badge" aria-live="polite">
+                    <span className="month-display-dot" aria-hidden="true" />
+                    <div>
+                        <span>Vous consultez</span>
+                        <strong className="month-capitalize">{getFormattedMonthTitle()}</strong>
+                    </div>
+                </div> */}
             </section>
 
             {/* Monthly Summary Grid */}
@@ -265,40 +277,40 @@ const MonthlyReports = () => {
                                     </tr>
                                 ))
                                 : invoices.map((inv) => (
-                                <tr key={inv.id}>
-                                    <td className="date-cell">{formatDateFr(inv.date)}</td>
-                                    <td className="day-cell"><strong>{inv.dayName}</strong></td>
-                                    <td>{inv.nbP}</td>
-                                    <td>{inv.nbOf}</td>
-                                    <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
-                                    <td className={parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}>
-                                        {inv.averageCost} Ar
-                                    </td>
-                                    {/* <td className="comment-cell" title={inv.comment}>
+                                    <tr key={inv.id}>
+                                        <td className="date-cell">{formatDateFr(inv.date)}</td>
+                                        <td className="day-cell"><strong>{inv.dayName}</strong></td>
+                                        <td>{inv.nbP}</td>
+                                        <td>{inv.nbOf}</td>
+                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                        <td className={parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}>
+                                            {inv.averageCost} Ar
+                                        </td>
+                                        {/* <td className="comment-cell" title={inv.comment}>
                                         {inv.comment ? (
                                             <span className="has-comment-badge">Oui</span>
                                         ) : (
                                             <span className="no-comment-text">—</span>
                                         )}
                                     </td> */}
-                                    <td className="actions-cell">
-                                        <button
-                                            className="action-btn view-btn"
-                                            onClick={() => handleOpenModal(inv, 'view')}
-                                            title="Consulter"
-                                        >
-                                            <Eye size={16} /> Voir
-                                        </button>
-                                        <button
-                                            className="action-btn edit-btn"
-                                            onClick={() => handleOpenModal(inv, 'edit')}
-                                            title="Modifier"
-                                        >
-                                            <Edit3 size={16} /> Modifier
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td className="actions-cell">
+                                            <button
+                                                className="action-btn view-btn"
+                                                onClick={() => handleOpenModal(inv, 'view')}
+                                                title="Consulter"
+                                            >
+                                                <Eye size={16} /> Voir
+                                            </button>
+                                            <button
+                                                className="action-btn edit-btn"
+                                                onClick={() => handleOpenModal(inv, 'edit')}
+                                                title="Modifier"
+                                            >
+                                                <Edit3 size={16} /> Modifier
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </div>

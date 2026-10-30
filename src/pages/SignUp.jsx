@@ -78,7 +78,7 @@ const SignUp = () => {
 
         setIsPending(true);
         try {
-            const response = await fetch("http://192.168.1.3:8000/api/users/signup", {
+            const response = await fetch("http://localhost:8000/api/auth/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -92,16 +92,14 @@ const SignUp = () => {
 
             const data = await response.json();
 
-            console.log(data);
-
-            if (data.message || !response.ok) {
-                throw new Error(data.message || "Échec de la création du compte.");
+            if (!response.ok || data?.message || data?.error) {
+                throw new Error(data?.message || data?.error || "Une erreur s'est produite lors de l'inscription.");
             }
 
             setSuccess("Compte créé avec succès ! Redirection vers la page de connexion...");
             setTimeout(() => {
                 navigate("/signin");
-            }, 5000);
+            }, 3000);
         } catch (err) {
             setError(err.message || "Une erreur s'est produite lors de l'inscription.");
         } finally {

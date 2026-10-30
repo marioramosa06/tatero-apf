@@ -1,5 +1,6 @@
-import { useState } from "react";
-// import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 import {
     Calendar,
     Users,
@@ -8,12 +9,16 @@ import {
     Calculator,
     MessageSquareText,
     Save,
-    Loader
+    Loader,
+    ArrowLeft
 } from "lucide-react";
 import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 
+
 const DailyReports = () => {
+    const { user } = useAuth()
+
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(null)
     const [isPending, setIsPending] = useState(false)
@@ -47,6 +52,8 @@ const DailyReports = () => {
         }));
     };
 
+
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setError(null)
@@ -77,29 +84,32 @@ const DailyReports = () => {
         const submissionData = {
             ...formData,
             averageCost: calculateAverageCost(),
-            user: "6ac466b071eb6299c74895eb"
+            user: user._id
+
         };
         // console.log("Facture journalière soumise :", submissionData);
         // Add your API call / submit logic here
-        fetch("http://192.168.1.3:8000/api/invoices/", {
+        fetch("http://localhost:8000/api/invoices", {
             headers: { "Content-Type": "application/json" },
-            method: "post",
+            method: "POST",
             body: JSON.stringify(submissionData)
         })
-            .then((res) => res.json())
-            .then((data) => {
-                console.log(data)
-                if (data.error) {
-                    throw new Error(data.error);
+            .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok || data?.error) {
+                    throw new Error(data?.error || "Impossible d'enregistrer la facture.");
                 }
+                return data;
+            })
+            .then((data) => {
                 setFormData({
-                    date: "",
+                    date: new Date().toISOString().split("T")[0],
                     nbP: "",
                     nbOf: "",
                     amount: "",
                     comment: ""
                 })
-                setSuccess(`Enregistrement d'une facture de ${data.amount} Ar pour la date du ${data.date.split("T")[0]} reussi  `)
+                setSuccess(`Enregistrement d'une facture de ${data.amount} Ar pour la date du ${data.date.split("T")[0]} réussi.`)
                 setIsPending(false)
             }).catch((err) => {
                 setError(err.message)
@@ -114,9 +124,10 @@ const DailyReports = () => {
             <div className="report-container">
 
                 <header className="report-header">
-                    {/* <Link to="/" className="back-link">
-                    <ArrowLeft className="back-icon" /> Retour à l'accueil
-                </Link> */}
+                    <Link to="/" className="back-link">
+                        <ArrowLeft className="back-icon" /> Retour à l'accueil
+
+                    </Link>
                     <div className="header-title-wrapper">
                         <span className="report-badge">Facture Journalière </span>
                         <h1 className="report-title">Enregistrer une facture</h1>

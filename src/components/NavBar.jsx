@@ -14,7 +14,7 @@ const Navbar = () => {
         <header className="desktop-navbar">
             <div className="nav-container">
                 {/* Brand Logo & Name */}
-                {/* <NavLink to="/" className="nav-brand">
+                <NavLink to="/" className="nav-brand">
                     <svg
                         width="28"
                         height="28"
@@ -30,10 +30,10 @@ const Navbar = () => {
                         <line x1="6" y1="20" x2="6" y2="14"></line>
                     </svg>
                     <span className="nav-brand-name">Tatero</span>
-                </NavLink> */}
-                <Link to="/" className="back-link nav-brand">
+                </NavLink>
+                {/* <Link to="/" className="back-link nav-brand">
                     <ArrowLeft className="back-icon" />Retour à l'accueil
-                </Link>
+                </Link> */}
 
                 {/* Navigation Links */}
                 <nav className="nav-links">
@@ -42,17 +42,17 @@ const Navbar = () => {
                         <span>Accueil</span>
                     </NavLink> */}
 
-                    <NavLink to="/invoices/day/new" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                    <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         {/* <FilePlus className="nav-icon" /> */}
                         <span>Journalier</span>
                     </NavLink>
 
-                    <NavLink to="/invoices/week" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                    <NavLink to="/reports/week" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         {/* <CalendarDays className="nav-icon" /> */}
                         <span>Hebdomadaire</span>
                     </NavLink>
 
-                    <NavLink to="/invoices/month" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                    <NavLink to="/reports/month" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         {/* <BarChart3 className="nav-icon" /> */}
                         <span>Mensuel</span>
                     </NavLink>

@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
     CalendarDays,
     ArrowRight,
-    // Coins,
-    // Users,
-    // Receipt,
-    // Calculator,
-    // Eye,
-    // Edit3,
+    ArrowLeft,
     X,
     Check,
     DatabaseXIcon,
-    // FileText,
-    // Download
+    Download
 } from "lucide-react";
 import "../styles/WeeklyReports.css";
 
@@ -106,27 +100,31 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
-        fetch(`http://192.168.1.3:8000/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
-            .then(res => {
-                return res.json()
+        fetch(`http://localhost:8000/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
+            .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data?.error || "Impossible de charger les factures.");
+                }
+                return data;
             })
-            .then(dat => {
-                // console.log(dat);
+            .then((dat) => {
                 setTotalAmount(0)
                 setTotalPatient(0)
                 setTotalOf(0)
 
                 setInvoices(dat)
                 dat.forEach(element => {
-                    setTotalAmount(prev => prev + element.amount)
-                    setTotalPatient(prev => prev + element.nbP)
-                    setTotalOf(prev => prev + element.nbOf)
+                    setTotalAmount(prev => prev + Number(element.amount || 0))
+                    setTotalPatient(prev => prev + Number(element.nbP || 0))
+                    setTotalOf(prev => prev + Number(element.nbOf || 0))
                 });
-                setLoading(false)
 
             }).catch(err => {
                 console.log(err.message);
                 setError(err.message)
+                setLoading(false)
+            }).finally(() => {
                 setLoading(false)
             })
     }, [startDate, endDate])
@@ -136,6 +134,9 @@ const WeeklyReports = () => {
             <div className="report-container">
                 {/* Header */}
                 <header className="report-header">
+                    <Link to="/" className="back-link">
+                        <ArrowLeft className="back-icon" /> Retour à l'accueil
+                    </Link>
                     <div className="header-title-wrapper">
                         <span className="report-badge">Rapport Hebdo</span>
                         <h1 className="report-title">Facture de la semaine</h1>
@@ -260,9 +261,9 @@ const WeeklyReports = () => {
                         <main className="table-card">
                             <div className="table-header flex-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <h2>Factures enregistrées (Lundi - Vendredi)</h2>
-                                {/* <button className="action-btn export-btn" onClick={handleExportCSV} title="Exporter en CSV">
-                            <Download size={16} /> Exporter le rapport
-                        </button> */}
+                                <button className="action-btn export-btn" title="Exporter en CSV">
+                                    <Download size={18} />
+                                </button>
                             </div>
 
                             <div className="table-responsive">

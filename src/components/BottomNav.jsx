@@ -16,25 +16,25 @@ const BottomNav = () => {
                 <span className="bottom-nav-label">Accueil</span>
             </NavLink>
 
-            <NavLink to="/invoices/day/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <FilePlus className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Jour</span>
             </NavLink>
 
-            <NavLink to="/invoices/week" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            <NavLink to="/reports/week" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <CalendarDays className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Semaine</span>
             </NavLink>
 
-            <NavLink to="/invoices/month" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            <NavLink to="/reports/month" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <BarChart3 className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Mois</span>
             </NavLink>
 
-            {/* <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <Info className="bottom-nav-icon" />
                 <span className="bottom-nav-label">À propos</span>
-            </NavLink> */}
+            </NavLink>
         </nav>
     );
 };
