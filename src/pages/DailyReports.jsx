@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import {
@@ -89,7 +89,7 @@ const DailyReports = () => {
         };
         // console.log("Facture journalière soumise :", submissionData);
         // Add your API call / submit logic here
-        fetch("http://localhost:8000/api/invoices", {
+        fetch("https://api-tatero-apf.vercel.app/api/invoices", {
             headers: { "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify(submissionData)

@@ -100,7 +100,7 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
-        fetch(`http://localhost:8000/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
+        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`)
             .then(async (res) => {
                 const data = await res.json();
                 if (!res.ok) {
