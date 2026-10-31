@@ -10,7 +10,6 @@ const AppLayout = () => {
         "/reports/week",
         "/reports/month",
         "/profile",
-        "/about"
 
     ];
 

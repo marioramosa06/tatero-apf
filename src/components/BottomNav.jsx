@@ -4,7 +4,7 @@ import {
     FilePlus,
     CalendarDays,
     BarChart3,
-    Info,
+    // Info,
     CircleUserRound
 } from "lucide-react";
 import "../styles/BottomNav.css";

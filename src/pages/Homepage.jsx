@@ -4,13 +4,16 @@ import {
     CalendarDays,
     BarChart3,
     Info,
-    ArrowRight
+    ArrowRight,
+    UserRound
 } from "lucide-react";
 import "../styles/Homepage.css";
 import Footer from "../components/Footer";
+import useAuth from "../hooks/useAuth";
 
 
 const Homepage = () => {
+    const { isAuthenticated } = useAuth();
 
     return (
         <div className="homepage-container">
@@ -38,10 +41,12 @@ const Homepage = () => {
                 </div>
 
                 <p className="homepage-subtitle">
-                    Un outil qui facilite l'enregistrement, la suivi et l'analyser des factures de couverture de soins, Fait specialement pour les APF.
+                    Un outil qui facilite l'enregistrement, la suivi et l'analyser des factures de couverture de soins, Fait specialement pour les Agents de Protection Financiere.
                 </p>
             </header>
             <main className="homepage-grid">
+
+
                 <Link to="/invoices/new" className="homepage-card card-primary">
                     <div className="card-icon-wrapper">
                         <FilePlus className="card-icon" />
@@ -80,6 +85,20 @@ const Homepage = () => {
                         Consulter <ArrowRight className="hint-arrow" />
                     </span>
                 </Link>
+                {isAuthenticated && (
+                    <Link to="/profile" className="homepage-card card-primary">
+                        <div className="card-icon-wrapper">
+                            <UserRound className="card-icon" />
+                        </div>
+                        <div className="card-content">
+                            <h2>Mon profil</h2>
+                            <p>Consulter vos informations de compte et gérer votre espace personnel.</p>
+                        </div>
+                        <span className="card-action-hint">
+                            Ouvrir <ArrowRight className="hint-arrow" />
+                        </span>
+                    </Link>
+                )}
 
                 <Link to="/about" className="homepage-card card-primary">
                     <div className="card-icon-wrapper">
@@ -93,6 +112,7 @@ const Homepage = () => {
                         En savoir plus <ArrowRight className="hint-arrow" />
                     </span>
                 </Link>
+
             </main>
             <Footer />
         </div>
