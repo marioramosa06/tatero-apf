@@ -52,16 +52,18 @@ const Navbar = () => {
                         <span>Mensuel</span>
                     </NavLink>
 
-                    <NavLink to="/profile" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
-                        <CircleUserRound className="nav-icon" />
-                        <span>Profil</span>
-                    </NavLink>
-
                     {/* <NavLink to="/about" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}> */}
                     {/* <Info className="nav-icon" /> */}
                     {/* <span>À propos</span> */}
                     {/* </NavLink> */}
                 </nav>
+                <NavLink
+                    to="/profile"
+                    className={({ isActive }) => isActive ? "nav-item nav-profile active" : "nav-item nav-profile"}
+                >
+                    <CircleUserRound className="nav-icon" />
+                    <span>Profil</span>
+                </NavLink>
             </div>
         </header>
     );

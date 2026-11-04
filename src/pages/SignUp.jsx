@@ -13,6 +13,49 @@ import {
 import "../styles/DailyReports.css"; // Reuses shared form styles
 import Footer from "../components/Footer";
 
+const getFriendlyAuthError = (message) => {
+    const normalized = String(message || "").trim();
+
+    if (!normalized) {
+        return "Une erreur s'est produite lors de l'inscription.";
+    }
+
+    const lowerMessage = normalized.toLowerCase();
+
+    if (
+        lowerMessage.includes("déjà utilisée") ||
+        lowerMessage.includes("already") ||
+        lowerMessage.includes("duplicate") ||
+        lowerMessage.includes("already exists")
+    ) {
+        return "Cette adresse e-mail est déjà utilisée. Essayez une autre adresse ou connectez-vous.";
+    }
+
+    if (lowerMessage.includes("email") && lowerMessage.includes("valid")) {
+        return "Veuillez saisir une adresse e-mail valide.";
+    }
+
+    if (
+        lowerMessage.includes("nom") ||
+        lowerMessage.includes("genre") ||
+        lowerMessage.includes("lieu") ||
+        lowerMessage.includes("travail")
+    ) {
+        return "Veuillez vérifier les informations obligatoires du formulaire.";
+    }
+
+    if (
+        lowerMessage.includes("fetch") ||
+        lowerMessage.includes("network") ||
+        lowerMessage.includes("serveur") ||
+        lowerMessage.includes("failed to fetch")
+    ) {
+        return "Impossible de joindre le serveur d'inscription. Vérifiez votre connexion Internet, puis réessayez. Si le problème persiste, réessayez plus tard.";
+    }
+
+    return normalized;
+};
+
 const SignUp = () => {
     const navigate = useNavigate();
     const [error, setError] = useState(null);
@@ -82,18 +125,19 @@ const SignUp = () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: formData.name,
+                    name: formData.name.trim(),
                     gender: formData.gender,
-                    email: formData.email,
-                    workAt: formData.workAt,
+                    email: formData.email.trim(),
+                    workAt: formData.workAt.trim(),
                     password: formData.password
                 })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
+            const serverMessage = typeof data === "string" ? data : data?.message || data?.error;
 
-            if (!response.ok || data?.message || data?.error) {
-                throw new Error(data?.message || data?.error || "Une erreur s'est produite lors de l'inscription.");
+            if (!response.ok) {
+                throw new Error(getFriendlyAuthError(serverMessage));
             }
 
             setSuccess("Compte créé avec succès ! Redirection vers la page de connexion...");
@@ -101,7 +145,7 @@ const SignUp = () => {
                 navigate("/signin");
             }, 3000);
         } catch (err) {
-            setError(err.message || "Une erreur s'est produite lors de l'inscription.");
+            setError(getFriendlyAuthError(err.message));
         } finally {
             setIsPending(false);
         }

@@ -11,6 +11,57 @@ import "../styles/DailyReports.css"; // Reuses shared form styles
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 
+const getFriendlyAuthError = (message) => {
+    const normalized = String(message || "").trim();
+
+    if (!normalized) {
+        return "Une erreur s'est produite lors de la connexion.";
+    }
+
+    const lowerMessage = normalized.toLowerCase();
+
+    if (
+        lowerMessage.includes("déjà utilisée") ||
+        lowerMessage.includes("already") ||
+        lowerMessage.includes("duplicate") ||
+        lowerMessage.includes("already exists")
+    ) {
+        return "Cette adresse e-mail est déjà utilisée. Connectez-vous ou choisissez une autre adresse.";
+    }
+
+    if (
+        lowerMessage.includes("aucun compte") ||
+        lowerMessage.includes("introuvable") ||
+        lowerMessage.includes("not found")
+    ) {
+        return "Aucun compte trouvé pour cette adresse e-mail.";
+    }
+
+    if (
+        lowerMessage.includes("mot de passe") ||
+        lowerMessage.includes("incorrect") ||
+        lowerMessage.includes("invalid password") ||
+        lowerMessage.includes("password")
+    ) {
+        return "Le mot de passe est incorrect. Veuillez réessayer.";
+    }
+
+    if (lowerMessage.includes("email") && lowerMessage.includes("valid")) {
+        return "Veuillez saisir une adresse e-mail valide.";
+    }
+
+    if (
+        lowerMessage.includes("fetch") ||
+        lowerMessage.includes("network") ||
+        lowerMessage.includes("serveur") ||
+        lowerMessage.includes("failed to fetch")
+    ) {
+        return "Le service est temporairement indisponible. Veuillez réessayer dans quelques instants.";
+    }
+
+    return normalized;
+};
+
 const SignIn = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -50,13 +101,17 @@ const SignIn = () => {
             const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/signin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    email: formData.email.trim(),
+                    password: formData.password
+                })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
+            const serverMessage = typeof data === "string" ? data : data?.message || data?.error;
 
             if (!response.ok || data?.hasError) {
-                throw new Error(data?.message || "Identifiants invalides.");
+                throw new Error(getFriendlyAuthError(serverMessage));
             }
             if (!data.token) {
                 throw new Error("La réponse du serveur ne contient pas de jeton de connexion.");
