@@ -83,7 +83,7 @@ const Profile = () => {
                             <h2>{account.name || "Utilisateur"}</h2>
                             <p>{account.email || "Adresse email non renseignée"}</p>
                         </div>
-                        <span className="profile-status">Compte actif</span>
+                        {/* <span className="profile-status">Compte actif</span> */}
                     </div>
 
                     <dl className="profile-details">
@@ -106,9 +106,7 @@ const Profile = () => {
                     </dl>
 
                     <div className="profile-actions">
-                        <Link className="profile-primary-action" to="/invoices/new">
-                            Nouvelle facture <ArrowRight aria-hidden="true" />
-                        </Link>
+
                         <button className="profile-logout-action" type="button" onClick={handleLogout}>
                             <LogOut aria-hidden="true" /> Se déconnecter
                         </button>

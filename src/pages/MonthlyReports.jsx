@@ -11,55 +11,36 @@ import {
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
+import { getAuthHeaders } from "../utils/authHeaders";
+import useAuth from "../hooks/useAuth";
 
-// Helper to format date strings to local French format
+const formatDateInputValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+const getInvoiceDate = (dateValue) => {
+    const [year, month, day] = String(dateValue).slice(0, 10).split("-").map(Number);
+    return new Date(year, month - 1, day);
+};
+
 const formatDateFr = (dateStr) => {
-    const d = new Date(dateStr);
+    const d = getInvoiceDate(dateStr);
     return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-// Mock generator for daily invoices of a selected month
-const generateMockMonthlyInvoices = (yearMonth) => {
-    const [year, month] = yearMonth.split("-").map(Number);
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const invoices = [];
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const currentDate = new Date(year, month - 1, day);
-        const dayOfWeek = currentDate.getDay();
-
-        // Include weekdays (Monday = 1 to Friday = 5)
-        if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            const dateStr = currentDate.toISOString().split("T")[0];
-            const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-            const patients = Math.floor(Math.random() * 15) + 15;
-            const ordonnances = Math.floor(patients * 0.85);
-            const amount = Math.floor(patients * (Math.random() * 1000 + 2800));
-
-            invoices.push({
-                id: `INV-${dateStr}`,
-                dayName: dayNames[dayOfWeek],
-                date: dateStr,
-                nbP: patients,
-                nbOf: ordonnances,
-                amount: amount,
-                averageCost: (amount / patients).toFixed(2),
-                comment: (amount / patients) > 3500 ? "Augmentation du coût moyen due à des actes complexes." : "",
-            });
-        }
-    }
-    return invoices;
-};
-
 const MonthlyReports = () => {
+    const { token } = useAuth();
     // State for YYYY-MM selector
     const today = new Date();
     const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Invoices list for the selected month
-    const [invoices, setInvoices] = useState(() => generateMockMonthlyInvoices(defaultMonth));
+    const [invoices, setInvoices] = useState([]);
 
     // Modal state
     const [activeModal, setActiveModal] = useState(null); // { mode: 'view' | 'edit', invoice: obj }
@@ -67,25 +48,75 @@ const MonthlyReports = () => {
     const [modalError, setModalError] = useState(null);
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setInvoices(generateMockMonthlyInvoices(selectedMonth));
-            setLoading(false);
-        }, 300);
+        const [year, month] = selectedMonth.split("-").map(Number);
+        const startDate = formatDateInputValue(new Date(year, month - 1, 1));
+        const endDate = formatDateInputValue(new Date(year, month, 0));
+        const controller = new AbortController();
 
-        return () => clearTimeout(timeoutId);
-    }, [selectedMonth]);
+        setLoading(true);
+        setError(null);
+        setInvoices([]);
+
+        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`, {
+            headers: getAuthHeaders(token),
+            signal: controller.signal
+        })
+            .then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error("Votre session a expiré. Veuillez vous reconnecter pour consulter vos factures.");
+                    }
+                    throw new Error(data?.error || data?.message || "Impossible de charger les factures de ce mois.");
+                }
+                if (!Array.isArray(data)) {
+                    throw new Error("La réponse du serveur est invalide. Impossible d'afficher les factures.");
+                }
+                return data;
+            })
+            .then((data) => {
+                const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+                const monthlyInvoices = data.map((invoice) => {
+                    const invoiceDate = getInvoiceDate(invoice.date);
+                    const patientCount = Number(invoice.nbP) || 0;
+                    const amount = Number(invoice.amount) || 0;
+
+                    return {
+                        ...invoice,
+                        id: invoice._id,
+                        dayName: dayNames[invoiceDate.getDay()],
+                        averageCost: Number(invoice.averageCost ?? (patientCount ? amount / patientCount : 0)).toFixed(2),
+                        comment: invoice.comment || ""
+                    };
+                }).sort((a, b) => getInvoiceDate(a.date) - getInvoiceDate(b.date));
+                setInvoices(monthlyInvoices);
+            })
+            .catch((requestError) => {
+                if (requestError.name === "AbortError") return;
+                const message = requestError.message || "";
+                setError(
+                    message.toLowerCase().includes("fetch") || message.toLowerCase().includes("network")
+                        ? "Impossible de joindre le serveur. Vérifiez votre connexion Internet, puis réessayez."
+                        : message || "Impossible de charger les factures de ce mois."
+                );
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [selectedMonth, token]);
 
     // Handle month selection change
     const handleMonthChange = (e) => {
         const newMonth = e.target.value;
-        setSelectedMonth(newMonth);
-        setLoading(true);
+        if (newMonth) setSelectedMonth(newMonth);
     };
 
     // Calculate aggregated metrics
-    const totalAmount = invoices.reduce((acc, inv) => acc + Number(inv.amount), 0);
-    const totalPatients = invoices.reduce((acc, inv) => acc + Number(inv.nbP), 0);
-    const totalOrdonnances = invoices.reduce((acc, inv) => acc + Number(inv.nbOf), 0);
+    const totalAmount = invoices.reduce((acc, inv) => acc + Number(inv.amount || 0), 0);
+    const totalPatients = invoices.reduce((acc, inv) => acc + Number(inv.nbP || 0), 0);
+    const totalOrdonnances = invoices.reduce((acc, inv) => acc + Number(inv.nbOf || 0), 0);
     const totalDays = invoices.length;
     const avgDailyAmount = totalDays > 0 ? (totalAmount / totalDays).toFixed(2) : "0.00";
     const overallAvgCost = totalPatients > 0 ? (totalAmount / totalPatients).toFixed(2) : "0.00";
@@ -190,6 +221,8 @@ const MonthlyReports = () => {
                 </div> */}
             </section>
 
+            {error && <div className="alert error" role="alert">{error}</div>}
+
             {/* Monthly Summary Grid */}
             <section className="summary-grid monthly-summary">
                 {loading ? (
@@ -249,7 +282,7 @@ const MonthlyReports = () => {
                         Historique des factures de <span className="month-capitalize">{getFormattedMonthTitle()}</span>
                         {loading
                             ? <span className="skeleton-line skeleton-count" aria-hidden="true" />
-                            : <span className="count-pill">{invoices.length} jours facturés</span>}
+                            : <span className="count-pill">{invoices.length} factures</span>}
                     </h2>
                 </div>
 
@@ -276,6 +309,10 @@ const MonthlyReports = () => {
                                         ))}
                                     </tr>
                                 ))
+                                : error
+                                    ? <tr><td colSpan="7">Les factures n'ont pas pu être chargées.</td></tr>
+                                    : invoices.length === 0
+                                        ? <tr><td colSpan="7">Aucune facture enregistrée pour ce mois.</td></tr>
                                 : invoices.map((inv) => (
                                     <tr key={inv.id}>
                                         <td className="date-cell">{formatDateFr(inv.date)}</td>
