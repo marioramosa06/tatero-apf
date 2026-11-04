@@ -13,10 +13,32 @@ import {
 import "../styles/WeeklyReports.css";
 import useAuth from "../hooks/useAuth";
 
+const toDateInputValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+const getWorkWeekRange = (value) => {
+    const [year, month, day] = value.split("-").map(Number);
+    const monday = new Date(year, month - 1, day);
+    const dayOfWeek = monday.getDay();
+    monday.setDate(monday.getDate() + (dayOfWeek === 0 ? -6 : 1 - dayOfWeek));
+
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+
+    return {
+        startDate: toDateInputValue(monday),
+        endDate: toDateInputValue(friday)
+    };
+};
+
 const WeeklyReports = () => {
     const { user, token } = useAuth()
-    const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0])
-    const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0])
+    const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())))
+    const { startDate, endDate } = dateRange
 
     const formatDate = (value) => {
         if (!value) return "";
@@ -47,8 +69,10 @@ const WeeklyReports = () => {
     //error
     const [error, setError] = useState(null);
 
-    const handleDateChange = (setter) => (e) => {
-        setter(e.target.value);
+    const handleDateChange = (e) => {
+        if (!e.target.value) return;
+
+        setDateRange(getWorkWeekRange(e.target.value));
         setLoading(true);
         setError(null);
         setInvoices(null);
@@ -150,7 +174,7 @@ const WeeklyReports = () => {
                         <span className="report-badge">Rapport Hebdo</span>
                         <h1 className="report-title">Facture de la semaine</h1>
                         <p className="report-subtitle">
-                            Sélectionnez une semaine pour afficher et gérer les factures du lundi au vendredi.
+                            Sélectionnez une date : la période sera automatiquement réglée du lundi au vendredi.
                         </p>
                     </div>
                 </header>
@@ -173,7 +197,7 @@ const WeeklyReports = () => {
                                 type="date"
                                 id="startDate"
                                 value={startDate}
-                                onChange={handleDateChange(setStartDate)}
+                                onChange={handleDateChange}
                             />
                         </div>
                         <ArrowRight className="week-date-separator" aria-hidden="true" />
@@ -183,7 +207,7 @@ const WeeklyReports = () => {
                                 type="date"
                                 id="endDate"
                                 value={endDate}
-                                onChange={handleDateChange(setEndDate)}
+                                onChange={handleDateChange}
                             />
                         </div>
                     </div>
