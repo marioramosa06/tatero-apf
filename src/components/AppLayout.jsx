@@ -1,5 +1,4 @@
 import { Outlet, useLocation } from "react-router-dom";
-import { Analytics } from "@vercel/analytics/react";
 import Navbar from "./NavBar";
 import BottomNav from "./BottomNav";
 
@@ -28,7 +27,7 @@ const AppLayout = () => {
             </main>
 
             {shouldShowNav && <BottomNav />}
-            <Analytics />
+
         </div>
     );
 };
