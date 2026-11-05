@@ -297,7 +297,7 @@ const MonthlyReports = () => {
                                 <th>Montant Total</th>
                                 <th>Coût Moyen</th>
                                 {/* <th>Commentaire</th> */}
-                                <th>Actions</th>
+                                {/* <th>Actions</th> */}
                             </tr>
                         </thead>
                         <tbody>
@@ -313,24 +313,24 @@ const MonthlyReports = () => {
                                     ? <tr><td colSpan="7">Les factures n'ont pas pu être chargées.</td></tr>
                                     : invoices.length === 0
                                         ? <tr><td colSpan="7">Aucune facture enregistrée pour ce mois.</td></tr>
-                                : invoices.map((inv) => (
-                                    <tr key={inv.id}>
-                                        <td className="date-cell">{formatDateFr(inv.date)}</td>
-                                        <td className="day-cell"><strong>{inv.dayName}</strong></td>
-                                        <td>{inv.nbP}</td>
-                                        <td>{inv.nbOf}</td>
-                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
-                                        <td className={parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}>
-                                            {inv.averageCost} Ar
-                                        </td>
-                                        {/* <td className="comment-cell" title={inv.comment}>
+                                        : invoices.map((inv) => (
+                                            <tr key={inv.id}>
+                                                <td className="date-cell">{formatDateFr(inv.date)}</td>
+                                                <td className="day-cell"><strong>{inv.dayName}</strong></td>
+                                                <td>{inv.nbP}</td>
+                                                <td>{inv.nbOf}</td>
+                                                <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                                <td className={parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}>
+                                                    {inv.averageCost} Ar
+                                                </td>
+                                                {/* <td className="comment-cell" title={inv.comment}>
                                         {inv.comment ? (
                                             <span className="has-comment-badge">Oui</span>
                                         ) : (
                                             <span className="no-comment-text">—</span>
                                         )}
                                     </td> */}
-                                        <td className="actions-cell">
+                                                {/* <td className="actions-cell">
                                             <button
                                                 className="action-btn view-btn"
                                                 onClick={() => handleOpenModal(inv, 'view')}
@@ -345,9 +345,9 @@ const MonthlyReports = () => {
                                             >
                                                 <Edit3 size={16} /> Modifier
                                             </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                        </td> */}
+                                            </tr>
+                                        ))}
                         </tbody>
                     </table>
                 </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BriefcaseBusiness, CalendarDays, LogOut, Mail, UserRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BriefcaseBusiness, CalendarDays, LogOut, Mail, UserRound } from "lucide-react";
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 import { getAuthHeaders } from "../utils/authHeaders";
@@ -65,56 +65,59 @@ const Profile = () => {
     };
 
     return (
-        <div className="profile-page">
-            <header className="profile-heading">
-                <span className="profile-eyebrow">Espace personnel</span>
-                <h1>Mon profil</h1>
-                <p>Vos informations de compte.</p>
-            </header>
-
-            <main className="profile-content">
-                {error && <div className="alert error" role="alert">{error}</div>}
-                {loading && <p className="profile-loading" role="status">Chargement du profil...</p>}
-
-                <section className="profile-panel" aria-label="Informations du compte">
-                    <div className="profile-summary">
-                        <div className="profile-avatar" aria-hidden="true">{initials}</div>
-                        <div className="profile-identity">
-                            <h2>{account.name || "Utilisateur"}</h2>
-                            <p>{account.email || "Adresse email non renseignée"}</p>
-                        </div>
-                        {/* <span className="profile-status">Compte actif</span> */}
+        <>
+            <div className="profile-page report-container">
+                <header className="report-header profile-header">
+                    <div className="header-title-wrapper">
+                        <span className="report-badge">Espace personnel</span>
+                        <h1 className="report-title">Mon profil</h1>
+                        <p className="report-subtitle">Vos informations de compte.</p>
                     </div>
+                </header>
 
-                    <dl className="profile-details">
-                        <div className="profile-detail">
-                            <dt><UserRound aria-hidden="true" /> Genre</dt>
-                            <dd>{account.gender || "Non renseigné"}</dd>
-                        </div>
-                        <div className="profile-detail">
-                            <dt><BriefcaseBusiness aria-hidden="true" /> Lieu de travail</dt>
-                            <dd>{account.workAt || "Non renseigné"}</dd>
-                        </div>
-                        <div className="profile-detail">
-                            <dt><Mail aria-hidden="true" /> Adresse email</dt>
-                            <dd>{account.email || "Non renseignée"}</dd>
-                        </div>
-                        <div className="profile-detail">
-                            <dt><CalendarDays aria-hidden="true" /> Membre depuis</dt>
-                            <dd>{formatDate(account.createdAt)}</dd>
-                        </div>
-                    </dl>
+                <main className="profile-content">
+                    {error && <div className="alert error" role="alert">{error}</div>}
+                    {loading && <p className="profile-loading" role="status">Chargement du profil...</p>}
 
-                    <div className="profile-actions">
+                    <section className="profile-panel" aria-label="Informations du compte">
+                        <div className="profile-summary">
+                            <div className="profile-avatar" aria-hidden="true">{initials}</div>
+                            <div className="profile-identity">
+                                <h2>{account.name || "Utilisateur"}</h2>
+                                <p>{account.email || "Adresse email non renseignée"}</p>
+                            </div>
+                            {/* <span className="profile-status">Compte actif</span> */}
+                        </div>
 
-                        <button className="profile-logout-action" type="button" onClick={handleLogout}>
-                            <LogOut aria-hidden="true" /> Se déconnecter
-                        </button>
-                    </div>
-                </section>
-            </main>
+                        <dl className="profile-details">
+                            <div className="profile-detail">
+                                <dt><UserRound aria-hidden="true" /> Genre</dt>
+                                <dd>{account.gender || "Non renseigné"}</dd>
+                            </div>
+                            <div className="profile-detail">
+                                <dt><BriefcaseBusiness aria-hidden="true" /> Lieu de travail</dt>
+                                <dd>{account.workAt || "Non renseigné"}</dd>
+                            </div>
+                            <div className="profile-detail">
+                                <dt><Mail aria-hidden="true" /> Adresse email</dt>
+                                <dd>{account.email || "Non renseignée"}</dd>
+                            </div>
+                            <div className="profile-detail">
+                                <dt><CalendarDays aria-hidden="true" /> Membre depuis</dt>
+                                <dd>{formatDate(account.createdAt)}</dd>
+                            </div>
+                        </dl>
+
+                        <div className="profile-actions">
+                            <button className="profile-logout-action" type="button" onClick={handleLogout}>
+                                <LogOut aria-hidden="true" /> Se déconnecter
+                            </button>
+                        </div>
+                    </section>
+                </main>
+            </div>
             <Footer />
-        </div>
+        </>
     );
 };
 
