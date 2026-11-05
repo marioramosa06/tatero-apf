@@ -16,6 +16,20 @@ import {
 import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 
+const getNextWeekday = (date) => {
+    const [year, month, day] = date.split("-").map(Number);
+    const nextDate = new Date(year, month - 1, day + 1);
+
+    while (nextDate.getDay() === 0 || nextDate.getDay() === 6) {
+        nextDate.setDate(nextDate.getDate() + 1);
+    }
+
+    const nextYear = nextDate.getFullYear();
+    const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+    const nextDay = String(nextDate.getDate()).padStart(2, "0");
+
+    return `${nextYear}-${nextMonth}-${nextDay}`;
+};
 
 const DailyReports = () => {
     const { user, token } = useAuth()
@@ -107,7 +121,7 @@ const DailyReports = () => {
             })
             .then((data) => {
                 setFormData({
-                    date: new Date().toISOString().split("T")[0],
+                    date: getNextWeekday(submissionData.date),
                     nbP: "",
                     nbOf: "",
                     amount: "",
