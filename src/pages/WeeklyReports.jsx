@@ -36,7 +36,7 @@ const getWorkWeekRange = (value) => {
 };
 
 const WeeklyReports = () => {
-    const { user, token } = useAuth()
+    const { token } = useAuth()
     const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())))
     const { startDate, endDate } = dateRange
 
@@ -57,6 +57,7 @@ const WeeklyReports = () => {
     const [activeModal, setActiveModal] = useState(null); // { mode: 'view' | 'edit', invoice: obj }
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Calculate aggregated weekly summary
     const [totalAmount, setTotalAmount] = useState(0);
@@ -92,7 +93,7 @@ const WeeklyReports = () => {
     };
 
     // Save edited invoice
-    const handleModalSubmit = (e) => {
+    const handleModalSubmit = async (e) => {
         e.preventDefault();
         setModalError(null);
         if (!modalFormData || activeModal?.mode !== "edit") return;
@@ -113,17 +114,58 @@ const WeeklyReports = () => {
             return;
         }
 
-        const updatedAvg = modalFormData.nbP > 0
-            ? (modalFormData.amount / modalFormData.nbP).toFixed(0)
-            : "0.00";
+        const invoiceId = modalFormData._id ?? modalFormData.id;
+        if (!invoiceId) {
+            setModalError("Impossible d'identifier cette facture.");
+            return;
+        }
 
-        const updatedInvoice = {
-            ...modalFormData,
-            averageCost: updatedAvg
+        const updatedAvg = Number(modalFormData.nbP) > 0
+            ? Number((Number(modalFormData.amount) / Number(modalFormData.nbP)).toFixed(0))
+            : 0;
+        const submissionData = {
+            nbP: Number(modalFormData.nbP),
+            nbOf: Number(modalFormData.nbOf),
+            amount: Number(modalFormData.amount),
+            averageCost: updatedAvg,
+            comment: modalFormData.comment || ""
         };
 
-        setInvoices((prev) => prev.map((inv) => inv.id === updatedInvoice.id ? updatedInvoice : inv));
-        handleCloseModal();
+        setIsSaving(true);
+        try {
+            const response = await fetch(`https://api-tatero-apf.vercel.app/api/invoices/${encodeURIComponent(invoiceId)}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...getAuthHeaders(token)
+                },
+                body: JSON.stringify(submissionData)
+            });
+            const data = await response.json();
+            if (!response.ok || data?.error) {
+                throw new Error(data?.error || "Impossible d'enregistrer les modifications.");
+            }
+
+            const updatedInvoice = {
+                ...modalFormData,
+                ...data,
+                id: data.id ?? data._id ?? modalFormData.id,
+                averageCost: data.averageCost ?? updatedAvg
+            };
+            const originalInvoice = activeModal.invoice;
+
+            setInvoices((prev) => prev.map((invoice) =>
+                String(invoice._id ?? invoice.id) === String(invoiceId) ? updatedInvoice : invoice
+            ));
+            setTotalAmount((prev) => prev + Number(updatedInvoice.amount || 0) - Number(originalInvoice.amount || 0));
+            setTotalPatient((prev) => prev + Number(updatedInvoice.nbP || 0) - Number(originalInvoice.nbP || 0));
+            setTotalOf((prev) => prev + Number(updatedInvoice.nbOf || 0) - Number(originalInvoice.nbOf || 0));
+            handleCloseModal();
+        } catch (error) {
+            setModalError(error.message);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     useEffect(() => {
@@ -160,7 +202,7 @@ const WeeklyReports = () => {
             }).finally(() => {
                 setLoading(false)
             })
-    }, [startDate, endDate])
+    }, [startDate, endDate, token])
 
     return (
         <>
@@ -374,7 +416,7 @@ const WeeklyReports = () => {
                                                 <input
                                                     type="number"
                                                     value={modalFormData.nbP}
-                                                    disabled={activeModal.mode === "view"}
+                                                    disabled={activeModal.mode === "view" || isSaving}
                                                     onChange={(e) => {
                                                         setModalError(null);
                                                         setModalFormData({ ...modalFormData, nbP: e.target.value });
@@ -387,7 +429,7 @@ const WeeklyReports = () => {
                                                 <input
                                                     type="number"
                                                     value={modalFormData.nbOf}
-                                                    disabled={activeModal.mode === "view"}
+                                                    disabled={activeModal.mode === "view" || isSaving}
                                                     onChange={(e) => {
                                                         setModalError(null);
                                                         setModalFormData({ ...modalFormData, nbOf: e.target.value });
@@ -401,7 +443,7 @@ const WeeklyReports = () => {
                                                     type="number"
                                                     step="0.01"
                                                     value={modalFormData.amount}
-                                                    disabled={activeModal.mode === "view"}
+                                                    disabled={activeModal.mode === "view" || isSaving}
                                                     onChange={(e) => {
                                                         setModalError(null);
                                                         setModalFormData({ ...modalFormData, amount: e.target.value });
@@ -417,7 +459,7 @@ const WeeklyReports = () => {
                                                     <textarea
                                                         rows="3"
                                                         value={modalFormData.comment}
-                                                        disabled={activeModal.mode === "view"}
+                                                        disabled={activeModal.mode === "view" || isSaving}
                                                         onChange={(e) => {
                                                             setModalError(null);
                                                             setModalFormData({ ...modalFormData, comment: e.target.value });
@@ -428,12 +470,12 @@ const WeeklyReports = () => {
                                         </div>
 
                                         <div className="modal-actions">
-                                            <button type="button" className="btn-secondary" onClick={handleCloseModal}>
+                                            <button type="button" className="btn-secondary" onClick={handleCloseModal} disabled={isSaving}>
                                                 Fermer
                                             </button>
                                             {activeModal.mode === "edit" && (
-                                                <button type="submit" className="submit-btn">
-                                                    <Check size={18} /> Enregistrer
+                                                <button type="submit" className="submit-btn" disabled={isSaving}>
+                                                    <Check size={18} /> {isSaving ? "Enregistrement..." : "Enregistrer"}
                                                 </button>
                                             )}
                                         </div>
