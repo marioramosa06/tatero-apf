@@ -153,7 +153,6 @@
     width: calc(100% + 2rem);
     margin: 0 -1rem;
     padding: 1.75rem 1.25rem 1.5rem;
-    text-align: left;
     background: linear-gradient(
       135deg,
       var(--primary-soft),
@@ -232,10 +231,6 @@
   .hint-arrow {
     width: 18px;
     height: 18px;
-  }
-
-  .card-primary:first-child {
-    border-left: 3px solid var(--secondary);
   }
 }
 

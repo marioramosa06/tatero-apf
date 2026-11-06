@@ -41,7 +41,7 @@ const Homepage = () => {
                 </div>
 
                 <p className="homepage-subtitle">
-                    Un outil qui facilite l'enregistrement, la suivi et l'analyser des factures de couverture de soins, Fait specialement pour les Agents de Protection Financiere.
+                    Un outil destiné aux agents de protection financière pour enregistrer, suivre et analyser les factures de couverture des soins.
                 </p>
             </header>
             <main className="homepage-grid">
