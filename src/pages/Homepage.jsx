@@ -5,7 +5,10 @@ import {
     BarChart3,
     Info,
     ArrowRight,
-    UserRound
+    UserRound,
+    LogIn,
+    UserPlus,
+    LayoutDashboard
 } from "lucide-react";
 import "../styles/Homepage.css";
 import Footer from "../components/Footer";
@@ -45,6 +48,19 @@ const Homepage = () => {
                 </p>
             </header>
             <main className="homepage-grid">
+                <Link to="/dashboard" className="homepage-card card-primary">
+                    <div className="card-icon-wrapper">
+                        <LayoutDashboard className="card-icon" />
+                    </div>
+                    <div className="card-content">
+                        <h2>Tableau de bord</h2>
+                        <p>Consulter un aperçu de votre activité et accéder rapidement à vos outils.</p>
+                    </div>
+                    <span className="card-action-hint">
+                        Consulter <ArrowRight className="hint-arrow" />
+                    </span>
+                </Link>
+
 
 
                 <Link to="/invoices/new" className="homepage-card card-primary">
@@ -98,6 +114,36 @@ const Homepage = () => {
                             Ouvrir <ArrowRight className="hint-arrow" />
                         </span>
                     </Link>
+                )}
+
+                {!isAuthenticated && (
+                    <>
+                        <Link to="/signin" className="homepage-card card-primary">
+                            <div className="card-icon-wrapper">
+                                <LogIn className="card-icon" />
+                            </div>
+                            <div className="card-content">
+                                <h2>Se connecter</h2>
+                                <p>Connectez-vous pour accéder à votre espace personnel.</p>
+                            </div>
+                            <span className="card-action-hint">
+                                Connexion <ArrowRight className="hint-arrow" />
+                            </span>
+                        </Link>
+
+                        <Link to="/signup" className="homepage-card card-primary">
+                            <div className="card-icon-wrapper">
+                                <UserPlus className="card-icon" />
+                            </div>
+                            <div className="card-content">
+                                <h2>Créer un compte</h2>
+                                <p>Inscrivez-vous pour commencer à utiliser Tatero APF.</p>
+                            </div>
+                            <span className="card-action-hint">
+                                Inscription <ArrowRight className="hint-arrow" />
+                            </span>
+                        </Link>
+                    </>
                 )}
 
                 <Link to="/about" className="homepage-card card-primary">

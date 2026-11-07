@@ -7,6 +7,7 @@ const AppLayout = () => {
 
     const showNavPaths = [
         "/invoices/new",
+        "/dashboard",
         "/reports/week",
         "/reports/month",
         "/profile",

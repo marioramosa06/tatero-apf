@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './components/AppLayout'
 import Homepage from './pages/Homepage'
+import Dashboard from './pages/Dashboard'
 import DailyReports from './pages/DailyReports'
 import WeeklyReports from './pages/WeeklyReports'
 import MonthlyReports from './pages/MonthlyReports'
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route path='/' element={<Homepage />} />
+            <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path='/invoices/new' element={<ProtectedRoute><DailyReports /></ProtectedRoute>} />
             <Route path='/reports/week' element={<ProtectedRoute><WeeklyReports /></ProtectedRoute>} />
             <Route path='/reports/month' element={<ProtectedRoute><MonthlyReports /></ProtectedRoute>} />

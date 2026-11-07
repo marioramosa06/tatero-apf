@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
     Home,
+    LayoutDashboard,
     FilePlus,
     CalendarDays,
     BarChart3,
@@ -15,6 +16,11 @@ const BottomNav = () => {
             <NavLink to="/" end className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <Home className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Accueil</span>
+            </NavLink>
+
+            <NavLink to="/dashboard" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+                <LayoutDashboard className="bottom-nav-icon" />
+                <span className="bottom-nav-label">Dashboard</span>
             </NavLink>
 
             <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
