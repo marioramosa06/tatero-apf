@@ -33,10 +33,10 @@ const Navbar = () => {
 
                 {/* Navigation Links */}
                 <nav className="nav-links">
-                    <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                    {/* <NavLink to="/dashboard" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <LayoutDashboard className="nav-icon" />
                         <span>Tableau de bord</span>
-                    </NavLink>
+                    </NavLink> */}
 
                     {/* <NavLink to="/" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <Home className="nav-icon" />

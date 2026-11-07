@@ -18,10 +18,10 @@ const BottomNav = () => {
                 <span className="bottom-nav-label">Accueil</span>
             </NavLink>
 
-            <NavLink to="/dashboard" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            {/* <NavLink to="/dashboard" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <LayoutDashboard className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Dashboard</span>
-            </NavLink>
+            </NavLink> */}
 
             <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <FilePlus className="bottom-nav-icon" />
@@ -38,10 +38,10 @@ const BottomNav = () => {
                 <span className="bottom-nav-label">Mois</span>
             </NavLink>
 
-            <NavLink to="/profile" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+            {/* <NavLink to="/profile" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <CircleUserRound className="bottom-nav-icon" />
                 <span className="bottom-nav-label">Profil</span>
-            </NavLink>
+            </NavLink> */}
 
             {/* <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
                 <Info className="bottom-nav-icon" />
