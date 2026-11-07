@@ -221,7 +221,7 @@ const DailyReports = () => {
                                     name="amount"
                                     step="0.01"
                                     min="0"
-                                    placeholder="ex: 150000"
+                                    placeholder="ex: 15000"
                                     value={formData.amount}
                                     onChange={handleChange}
                                 />

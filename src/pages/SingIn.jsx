@@ -158,7 +158,7 @@ const SignIn = () => {
                                 type="email"
                                 id="email"
                                 name="email"
-                                placeholder="exemple@domaine.com"
+                                placeholder="rakoto@mailaka.com"
                                 value={formData.email}
                                 onChange={handleChange}
                             />
@@ -174,7 +174,7 @@ const SignIn = () => {
                                 type="password"
                                 id="password"
                                 name="password"
-                                placeholder="••••••••"
+                                placeholder="Votre mot de passe"
                                 value={formData.password}
                                 onChange={handleChange}
                             />

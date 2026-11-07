@@ -9,7 +9,7 @@ import {
     CheckCircle2,
     Mail,
     Send,
-    MessageSquare,
+    // MessageSquare,
     X,
     Check,
     Smile
@@ -24,7 +24,7 @@ const About = () => {
     const [contactForm, setContactForm] = useState({
         name: "",
         email: "",
-        subject: "Message pour Tatero",
+        subject: "",
         message: ""
     });
 
@@ -55,7 +55,7 @@ const About = () => {
         setTimeout(() => {
             setContactSubmitted(false);
             setIsContactOpen(false);
-            setContactForm({ name: "", email: "", subject: "Message pour Tatero", message: "" });
+            setContactForm({ name: "", email: "", subject: "", message: "" });
         }, 2000);
     };
 
@@ -115,13 +115,13 @@ const About = () => {
                         <p>Détection automatique des coûts élevés pour ajouter un petit commentaire explicatif si nécessaire.</p>
                     </div>
 
-                    {/* <div className="feature-card">
+                    <div className="feature-card">
                         <div className="feature-icon-wrapper card-tertiary">
                             <CheckCircle2 className="feature-icon" />
                         </div>
                         <h3>Synthèses Intelligentes</h3>
                         <p>Regroupement pratique par semaine et par mois pour visualiser facilement les tendances.</p>
-                    </div> */}
+                    </div>
                 </section>
 
                 {/* Developer Credits */}
@@ -181,7 +181,7 @@ const About = () => {
                                         <label>Votre nom :</label>
                                         <input
                                             type="text"
-                                            placeholder="ex: Alex"
+                                            placeholder="ex: Rakoto"
                                             value={contactForm.name}
                                             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                                         />
@@ -191,7 +191,7 @@ const About = () => {
                                         <label>Votre Email :</label>
                                         <input
                                             type="email"
-                                            placeholder="exemple@domaine.com"
+                                            placeholder="rakoto@mailaka.com"
                                             value={contactForm.email}
                                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                                         />
