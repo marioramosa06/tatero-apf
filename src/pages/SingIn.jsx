@@ -10,6 +10,7 @@ import {
 import "../styles/DailyReports.css"; // Reuses shared form styles
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
+import PasswordInput from "../components/PasswordInput";
 
 const getFriendlyAuthError = (message) => {
     const normalized = String(message || "").trim();
@@ -170,8 +171,7 @@ const SignIn = () => {
                                 <Lock className="field-icon" />
                                 Mot de passe
                             </label>
-                            <input
-                                type="password"
+                            <PasswordInput
                                 id="password"
                                 name="password"
                                 placeholder="Votre mot de passe"

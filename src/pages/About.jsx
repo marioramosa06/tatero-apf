@@ -17,9 +17,14 @@ import {
 import "../styles/About.css";
 import Footer from "../components/Footer";
 
+const API_BASE_URL = (
+    import.meta.env.VITE_API_URL || "https://api-tatero-apf.vercel.app/api"
+).replace(/\/+$/, "");
+
 const About = () => {
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [contactSubmitted, setContactSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [contactError, setContactError] = useState(null);
     const [contactForm, setContactForm] = useState({
         name: "",
@@ -28,9 +33,10 @@ const About = () => {
         message: ""
     });
 
-    const handleContactSubmit = (e) => {
+    const handleContactSubmit = async (e) => {
         e.preventDefault();
         setContactError(null);
+
         if (!contactForm.name.trim()) {
             setContactError("Veuillez saisir votre nom.");
             return;
@@ -51,12 +57,44 @@ const About = () => {
             setContactError("Veuillez saisir votre message.");
             return;
         }
-        setContactSubmitted(true);
-        setTimeout(() => {
-            setContactSubmitted(false);
-            setIsContactOpen(false);
-            setContactForm({ name: "", email: "", subject: "", message: "" });
-        }, 2000);
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/messages`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name: contactForm.name,
+                    email: contactForm.email,
+                    subject: contactForm.subject,
+                    message: contactForm.message,
+                }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data?.message || "Impossible d'envoyer le message pour le moment.");
+            }
+
+            setContactSubmitted(true);
+            setTimeout(() => {
+                setContactSubmitted(false);
+                setIsContactOpen(false);
+                setContactForm({ name: "", email: "", subject: "", message: "" });
+            }, 2000);
+        } catch (error) {
+            setContactError(
+                error instanceof TypeError
+                    ? "Impossible de joindre le serveur. Vérifiez votre connexion Internet et réessayez."
+                    : error.message || "Une erreur est survenue lors de l'envoi du message."
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const openContactModal = () => {
@@ -159,7 +197,7 @@ const About = () => {
                         <div className="modal-header">
                             <h3>
                                 {/* <MessageSquare className="field-icon" />  */}
-                                Envoyer un message à Mario
+                                Envoyer un message
                             </h3>
                             <button className="close-btn" onClick={closeContactModal}>
                                 <X size={20} />
@@ -191,7 +229,7 @@ const About = () => {
                                         <label>Votre Email :</label>
                                         <input
                                             type="email"
-                                            placeholder="rakoto@mailaka.com"
+                                            placeholder="ex: rakoto@mailaka.com"
                                             value={contactForm.email}
                                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                                         />
@@ -201,6 +239,7 @@ const About = () => {
                                         <label>Sujet :</label>
                                         <input
                                             type="text"
+                                            placeholder="Sujet de votre message"
                                             value={contactForm.subject}
                                             onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
                                         />
@@ -227,8 +266,22 @@ const About = () => {
                                     >
                                         Annuler
                                     </button>
-                                    <button type="submit" className="submit-btn">
-                                        <Send size={16} /> Envoyer
+                                    <button
+                                        type="submit"
+                                        className="submit-btn"
+                                        disabled={isSubmitting}
+                                        aria-busy={isSubmitting}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <span className="spinner" aria-hidden="true" />
+                                                Envoi...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={16} /> Envoyer
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </form>

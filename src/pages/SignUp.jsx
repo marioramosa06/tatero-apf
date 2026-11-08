@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import "../styles/DailyReports.css"; // Reuses shared form styles
 import Footer from "../components/Footer";
+import PasswordInput from "../components/PasswordInput";
 
 const getFriendlyAuthError = (message) => {
     const normalized = String(message || "").trim();
@@ -251,8 +252,7 @@ const SignUp = () => {
                                 <Lock className="field-icon" />
                                 Mot de passe
                             </label>
-                            <input
-                                type="password"
+                            <PasswordInput
                                 id="password"
                                 name="password"
                                 placeholder="Nouveau mot de passe"
@@ -269,8 +269,7 @@ const SignUp = () => {
                                 <Lock className="field-icon" />
                                 Confirmer le mot de passe
                             </label>
-                            <input
-                                type="password"
+                            <PasswordInput
                                 id="confirmPassword"
                                 name="confirmPassword"
                                 placeholder="Confirmer le mot de passe"
