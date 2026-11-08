@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 /* =========================================================
    NUMBER → FRENCH WORDS  (for Ariary total)
@@ -145,6 +146,137 @@ function buildTableRows(yearMonth, invoices) {
     );
   }
   return rows;
+}
+
+function toDateOnly(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatShortDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function buildWeeklyDates(startDate) {
+  const start = new Date(`${startDate}T00:00:00`);
+  if (Number.isNaN(start.getTime())) {
+    return [];
+  }
+
+  return Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date;
+  });
+}
+
+export function exportWeeklyReportXLSX({
+  startDate,
+  endDate,
+  invoices = [],
+  user = {},
+  exportData = {},
+}) {
+  const weeklyDates = buildWeeklyDates(startDate);
+  const invoiceMap = new Map(
+    invoices.map((invoice) => [toDateOnly(invoice.date), invoice]),
+  );
+
+  const getNumericCellValue = (invoice, field) => {
+    if (!invoice || invoice[field] === undefined || invoice[field] === null) {
+      return "";
+    }
+
+    const value = Number(invoice[field]);
+    return Number.isFinite(value) ? value : "";
+  };
+
+  const stock = {
+    OF: exportData.stock?.OF ?? "",
+    RCS: exportData.stock?.RCS ?? "",
+    ticketBlanc: exportData.stock?.ticketBlanc ?? "",
+    ticketBleu: exportData.stock?.ticketBleu ?? "",
+    preRUMER: exportData.stock?.preRUMER ?? "",
+  };
+
+  const rows = [
+    ["Rapport hebdomadaire du projet Couverture de soins au niveau CSB"],
+    ["District:", exportData.district ?? "NOSY-VARIKA"],
+    ["CSB:", exportData.csb ?? user.workAt ?? ""],
+    ["Nom et prénom (s) de l'APF:", user.name || user.fullName || ""],
+    [],
+    [],
+    ["Factures"],
+    ["", ...weeklyDates.map((date) => formatShortDate(date))],
+    [
+      "Montant de la facture journalière",
+      ...weeklyDates.map((date) =>
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "amount"),
+      ),
+    ],
+    [
+      "Nombre de patients ayant reçu des tickets",
+      ...weeklyDates.map((date) =>
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "nbP"),
+      ),
+    ],
+    [
+      "Nombre OF",
+      ...weeklyDates.map((date) =>
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "nbOf"),
+      ),
+    ],
+    [
+      "Coût moyen",
+      ...weeklyDates.map((date) =>
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "averageCost"),
+      ),
+    ],
+    [
+      "Remarque",
+      ...weeklyDates.map((date) => invoiceMap.get(toDateOnly(date))?.comment || ""),
+    ],
+    ["Intrants rupture à la PhaGeCom", exportData.intrants || ""],
+    [],
+    [],
+    ["Outils de Gestion"],
+    ["", "OF", "RCS", "Ticket blanc", "Ticket bleu", "PreRUMER"],
+    [
+      "Quantité en stock",
+      stock.OF,
+      stock.RCS,
+      stock.ticketBlanc,
+      stock.ticketBleu,
+      stock.preRUMER,
+    ],
+  ];
+
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  worksheet["!cols"] = [
+    { wch: 28 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 18 },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Rapport hebdo");
+
+  const filename = `rapport_hebdo_${startDate}_au_${endDate || startDate}.xlsx`;
+  XLSX.writeFile(workbook, filename);
 }
 
 /* =========================================================

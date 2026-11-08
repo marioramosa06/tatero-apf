@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAuthHeaders } from "../utils/authHeaders";
+import { exportWeeklyReportXLSX } from "../utils/exportReport";
 import { Link } from "react-router-dom";
 import {
     CalendarDays,
@@ -36,7 +37,7 @@ const getWorkWeekRange = (value) => {
 };
 
 const WeeklyReports = () => {
-    const { token } = useAuth()
+    const { token, user } = useAuth()
     const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())))
     const { startDate, endDate } = dateRange
 
@@ -58,6 +59,19 @@ const WeeklyReports = () => {
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [exportForm, setExportForm] = useState({
+        district: "NOSY-VARIKA",
+        csb: user?.workAt || "",
+        intrants: "",
+        stock: {
+            OF: "",
+            RCS: "",
+            ticketBlanc: "",
+            ticketBleu: "",
+            preRUMER: "",
+        },
+    });
 
     // Calculate aggregated weekly summary
     const [totalAmount, setTotalAmount] = useState(0);
@@ -90,6 +104,30 @@ const WeeklyReports = () => {
         setActiveModal(null);
         setModalFormData(null);
         setModalError(null);
+    };
+
+    const openExportModal = () => {
+        setExportModalOpen(true);
+    };
+
+    const closeExportModal = () => {
+        setExportModalOpen(false);
+    };
+
+    const handleWeeklyExport = () => {
+        exportWeeklyReportXLSX({
+            startDate,
+            endDate,
+            invoices,
+            user: user || {},
+            exportData: {
+                district: exportForm.district,
+                csb: exportForm.csb,
+                intrants: exportForm.intrants,
+                stock: exportForm.stock,
+            },
+        });
+        closeExportModal();
     };
 
     // Save edited invoice
@@ -336,8 +374,14 @@ const WeeklyReports = () => {
                         <main className="table-card">
                             <div className="table-header flex-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <h2>Factures enregistrées (Lundi - Vendredi)</h2>
-                                <button className="action-btn export-btn" title="Exporter en CSV">
+                                <button
+                                    type="button"
+                                    className="action-btn export-btn"
+                                    title="Exporter le rapport"
+                                    onClick={openExportModal}
+                                >
                                     <Download size={18} />
+                                    <span> Exporter</span>
                                 </button>
                             </div>
 
@@ -390,6 +434,116 @@ const WeeklyReports = () => {
                                 </table>
                             </div>
                         </main>
+
+                        {exportModalOpen && (
+                            <div className="modal-backdrop" onClick={closeExportModal}>
+                                <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                                    <div className="modal-header">
+                                        <h3>Exporter le rapport hebdomadaire</h3>
+                                        <button type="button" className="close-btn" onClick={closeExportModal}>
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+
+                                    <div className="modal-body">
+                                        <div className="form-grid">
+                                            <div className="form-group">
+                                                <label>District</label>
+                                                <input
+                                                    type="text"
+                                                    value={exportForm.district}
+                                                    onChange={(e) => setExportForm((prev) => ({ ...prev, district: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>CSB</label>
+                                                <input
+                                                    type="text"
+                                                    value={exportForm.csb}
+                                                    onChange={(e) => setExportForm((prev) => ({ ...prev, csb: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div className="form-group full-width">
+                                                <label>Intrants rupture à la PhaGeCom</label>
+                                                <textarea
+                                                    rows="3"
+                                                    value={exportForm.intrants}
+                                                    onChange={(e) => setExportForm((prev) => ({ ...prev, intrants: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>OF</label>
+                                                <input
+                                                    type="number"
+                                                    value={exportForm.stock.OF}
+                                                    onChange={(e) => setExportForm((prev) => ({
+                                                        ...prev,
+                                                        stock: { ...prev.stock, OF: e.target.value },
+                                                    }))}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>RCS</label>
+                                                <input
+                                                    type="number"
+                                                    value={exportForm.stock.RCS}
+                                                    onChange={(e) => setExportForm((prev) => ({
+                                                        ...prev,
+                                                        stock: { ...prev.stock, RCS: e.target.value },
+                                                    }))}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Ticket blanc</label>
+                                                <input
+                                                    type="number"
+                                                    value={exportForm.stock.ticketBlanc}
+                                                    onChange={(e) => setExportForm((prev) => ({
+                                                        ...prev,
+                                                        stock: { ...prev.stock, ticketBlanc: e.target.value },
+                                                    }))}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>Ticket bleu</label>
+                                                <input
+                                                    type="number"
+                                                    value={exportForm.stock.ticketBleu}
+                                                    onChange={(e) => setExportForm((prev) => ({
+                                                        ...prev,
+                                                        stock: { ...prev.stock, ticketBleu: e.target.value },
+                                                    }))}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label>PreRUMER</label>
+                                                <input
+                                                    type="number"
+                                                    value={exportForm.stock.preRUMER}
+                                                    onChange={(e) => setExportForm((prev) => ({
+                                                        ...prev,
+                                                        stock: { ...prev.stock, preRUMER: e.target.value },
+                                                    }))}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="modal-actions">
+                                            <button type="button" className="btn-secondary" onClick={closeExportModal}>
+                                                Annuler
+                                            </button>
+                                            <button type="button" className="submit-btn" onClick={handleWeeklyExport}>
+                                                <Download size={18} /> Exporter XLSX
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* View / Edit Modal */}
                         {activeModal && modalFormData && (
