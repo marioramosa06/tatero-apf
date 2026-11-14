@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-    Home,
+    LayoutDashboard,
     FilePlus,
     CalendarDays,
     BarChart3,
@@ -10,9 +10,9 @@ import "../styles/BottomNav.css";
 const BottomNav = () => {
     return (
         <nav className="bottom-appbar" aria-label="Navigation mobile">
-            <NavLink to="/" end className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <Home className="bottom-nav-icon" aria-hidden="true" />
-                <span className="bottom-nav-label">Accueil</span>
+            <NavLink to="/dashboard" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
+                <LayoutDashboard className="bottom-nav-icon" aria-hidden="true" />
+                <span className="bottom-nav-label">Dashboard</span>
             </NavLink>
 
             <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
