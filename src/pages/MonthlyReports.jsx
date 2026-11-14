@@ -6,7 +6,9 @@ import {
     FileText,
     CalendarDays,
     ArrowLeft,
-    Download
+    Download,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
@@ -19,6 +21,12 @@ const formatDateInputValue = (date) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+};
+
+const shiftYearMonth = (yearMonth, deltaMonths) => {
+    const [year, month] = String(yearMonth).split("-").map(Number);
+    const shifted = new Date(year, month - 1 + deltaMonths, 1);
+    return `${shifted.getFullYear()}-${String(shifted.getMonth() + 1).padStart(2, "0")}`;
 };
 
 const getInvoiceDate = (dateValue) => {
@@ -145,14 +153,24 @@ const MonthlyReports = () => {
         return () => controller.abort();
     }, [selectedMonth, token]);
 
+    const applySelectedMonth = (nextMonth) => {
+        if (!nextMonth || nextMonth === selectedMonth) return;
+        setLoading(true);
+        setError(null);
+        setInvoices([]);
+        setSelectedMonth(nextMonth);
+    };
+
     const handleMonthChange = (e) => {
-        const newMonth = e.target.value;
-        if (newMonth && newMonth !== selectedMonth) {
-            setLoading(true);
-            setError(null);
-            setInvoices([]);
-            setSelectedMonth(newMonth);
-        }
+        applySelectedMonth(e.target.value);
+    };
+
+    const handleShiftMonth = (deltaMonths) => {
+        applySelectedMonth(shiftYearMonth(selectedMonth, deltaMonths));
+    };
+
+    const handleCurrentMonth = () => {
+        applySelectedMonth(defaultMonth);
     };
 
     const openExportModal = () => {
@@ -267,17 +285,47 @@ const MonthlyReports = () => {
                         </span>
                         <div>
                             <span className="monthly-picker-eyebrow">Période du rapport</span>
-                            <p>Choisissez le mois à consulter</p>
+                            <p className="month-capitalize">{getFormattedMonthTitle()}</p>
                         </div>
                     </div>
-                    <div className="monthly-picker-control">
-                        <label htmlFor="monthSelect">Mois sélectionné</label>
-                        <input
-                            type="month"
-                            id="monthSelect"
-                            value={selectedMonth}
-                            onChange={handleMonthChange}
-                        />
+                    <div className="monthly-picker-actions">
+                        <div className="month-stepper" role="group" aria-label="Navigation par mois">
+                            <button
+                                type="button"
+                                className="month-step-btn"
+                                onClick={() => handleShiftMonth(-1)}
+                                title="Mois précédent"
+                                aria-label="Mois précédent"
+                            >
+                                <ChevronLeft size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                className="month-step-btn month-step-current"
+                                onClick={handleCurrentMonth}
+                                disabled={selectedMonth === defaultMonth}
+                            >
+                                Ce mois
+                            </button>
+                            <button
+                                type="button"
+                                className="month-step-btn"
+                                onClick={() => handleShiftMonth(1)}
+                                title="Mois suivant"
+                                aria-label="Mois suivant"
+                            >
+                                <ChevronRight size={16} aria-hidden="true" />
+                            </button>
+                        </div>
+                        <div className="monthly-picker-control">
+                            <label htmlFor="monthSelect">Mois sélectionné</label>
+                            <input
+                                type="month"
+                                id="monthSelect"
+                                value={selectedMonth}
+                                onChange={handleMonthChange}
+                            />
+                        </div>
                     </div>
                 </section>
 
