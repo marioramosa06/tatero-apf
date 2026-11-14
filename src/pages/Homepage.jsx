@@ -3,11 +3,9 @@ import {
     FilePlus,
     CalendarDays,
     BarChart3,
-    Info,
     ArrowRight,
     UserRound,
     LogIn,
-    UserPlus,
     LayoutDashboard,
 } from "lucide-react";
 import "../styles/Homepage.css";
@@ -18,109 +16,94 @@ const Homepage = () => {
     const { isAuthenticated } = useAuth();
 
     return (
-        <div className="homepage-container">
-            <header className="homepage-hero">
-                <div className="homepage-hero-copy">
-                    <div className="homepage-brand">
-                        <span>Tatero</span>
-                        <span className="homepage-brand-divider" aria-hidden="true">·</span>
-                        <span>APF</span>
+        <div className="homepage-shell">
+            <header className="homepage-topbar">
+                <div className="homepage-topbar-inner">
+                    <Link to="/" className="homepage-wordmark">
+                        Tatero
+                    </Link>
+
+                    <div className="homepage-topbar-action">
+                        <Link to="/about" className="homepage-top-link">
+                            À propos
+                        </Link>
+                        {isAuthenticated && (
+                            <Link to="/profile" className="homepage-top-btn">
+                                <UserRound size={15} aria-hidden="true" />
+                                <span>Profil</span>
+                            </Link>
+                        )}
                     </div>
-
-                    <h1 className="homepage-title">
-                        Une gestion plus simple, <span>un suivi plus clair.</span>
-                    </h1>
-                    <p className="homepage-subtitle">
-                        Enregistrez vos factures de couverture des soins, suivez votre activité et retrouvez vos rapports au même endroit.
-                    </p>
-
-                    {!isAuthenticated ? (
-                        <div className="homepage-auth-actions">
-                            <Link to="/signin" className="homepage-auth-link homepage-auth-link-primary">
-                                <LogIn aria-hidden="true" />
-                                Se connecter
-                            </Link>
-                            <Link to="/signup" className="homepage-auth-link">
-                                <UserPlus aria-hidden="true" />
-                                Créer un compte
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="homepage-auth-actions">
-                            <Link to="/dashboard" className="homepage-auth-link homepage-auth-link-primary">
-                                <LayoutDashboard aria-hidden="true" />
-                                Tableau de bord
-                            </Link>
-                            <Link to="/invoices/new" className="homepage-auth-link">
-                                <FilePlus aria-hidden="true" />
-                                Nouvelle facture
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </header>
 
-            <main className="homepage-main">
-                <section className="homepage-tools" aria-label="Outils disponibles">
-                    <div className="homepage-grid">
-                        <Link to="/dashboard" className="homepage-card">
-                            <div className="card-icon-wrapper"><LayoutDashboard className="card-icon" aria-hidden="true" /></div>
-                            <div className="card-content">
-                                <h3>Tableau de bord</h3>
-                                <p>Visualisez votre activité et accédez rapidement à vos outils.</p>
-                            </div>
-                            <span className="card-action-hint">Ouvrir <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
-                        </Link>
+            <div className="homepage-container">
+                <section className="homepage-hero" aria-labelledby="homepage-hero-title">
+                    <p className="homepage-kicker">
+                        Tatero <span aria-hidden="true">·</span> APF
+                    </p>
+                    <h1 id="homepage-hero-title" className="homepage-title">
+                        Une gestion plus simple, <span>un suivi plus clair.</span>
+                    </h1>
+                    <p className="homepage-subtitle">
+                        Saisie des factures quotidiennes et rapports périodiques au même endroit.
+                    </p>
 
-                        <Link to="/invoices/new" className="homepage-card">
-                            <div className="card-icon-wrapper"><FilePlus className="card-icon" aria-hidden="true" /></div>
-                            <div className="card-content">
-                                <h3>Facture journalière</h3>
-                                <p>Enregistrez une nouvelle facture pour la journée.</p>
-                            </div>
-                            <span className="card-action-hint">Créer une facture <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
-                        </Link>
-
-                        <Link to="/reports/week" className="homepage-card">
-                            <div className="card-icon-wrapper"><CalendarDays className="card-icon" aria-hidden="true" /></div>
-                            <div className="card-content">
-                                <h3>Rapport hebdomadaire</h3>
-                                <p>Analysez et compilez les chiffres de la semaine.</p>
-                            </div>
-                            <span className="card-action-hint">Voir le rapport <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
-                        </Link>
-
-                        <Link to="/reports/month" className="homepage-card">
-                            <div className="card-icon-wrapper"><BarChart3 className="card-icon" aria-hidden="true" /></div>
-                            <div className="card-content">
-                                <h3>Récapitulatif mensuel</h3>
-                                <p>Consultez ou exportez la synthèse du mois.</p>
-                            </div>
-                            <span className="card-action-hint">Voir le récapitulatif <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
-                        </Link>
-
-                        {isAuthenticated && (
-                            <Link to="/profile" className="homepage-card">
-                                <div className="card-icon-wrapper"><UserRound className="card-icon" aria-hidden="true" /></div>
-                                <div className="card-content">
-                                    <h3>Mon profil</h3>
-                                    <p>Consultez vos informations et gérez votre compte.</p>
-                                </div>
-                                <span className="card-action-hint">Voir mon profil <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
+                    {!isAuthenticated && (
+                        <div className="homepage-hero-actions">
+                            <Link to="/signin" className="homepage-cta-primary">
+                                <LogIn size={16} aria-hidden="true" />
+                                <span>Se connecter</span>
                             </Link>
-                        )}
-
-                        <Link to="/about" className="homepage-card">
-                            <div className="card-icon-wrapper"><Info className="card-icon" aria-hidden="true" /></div>
-                            <div className="card-content">
-                                <h3>À propos</h3>
-                                <p>Découvrez Tatero APF et ses fonctionnalités.</p>
-                            </div>
-                            <span className="card-action-hint">En savoir plus <ArrowRight className="hint-arrow" aria-hidden="true" /></span>
-                        </Link>
-                    </div>
+                            <Link to="/signup" className="homepage-cta-secondary">
+                                <span>Créer un compte</span>
+                                <ArrowRight size={15} aria-hidden="true" />
+                            </Link>
+                        </div>
+                    )}
                 </section>
-            </main>
+
+                <main className="homepage-main">
+                    <nav className="homepage-links-grid" aria-label="Modules">
+                        <Link to="/dashboard" className="homepage-link-item">
+                            <span className="link-item-icon"><LayoutDashboard size={18} aria-hidden="true" /></span>
+                            <span className="link-item-text">
+                                <strong>Tableau de bord</strong>
+                                <small>Aperçu du mois</small>
+                            </span>
+                            <ArrowRight className="link-item-arrow" size={16} aria-hidden="true" />
+                        </Link>
+
+                        <Link to="/invoices/new" className="homepage-link-item">
+                            <span className="link-item-icon"><FilePlus size={18} aria-hidden="true" /></span>
+                            <span className="link-item-text">
+                                <strong>Facture journalière</strong>
+                                <small>Saisie du jour</small>
+                            </span>
+                            <ArrowRight className="link-item-arrow" size={16} aria-hidden="true" />
+                        </Link>
+
+                        <Link to="/reports/week" className="homepage-link-item">
+                            <span className="link-item-icon"><CalendarDays size={18} aria-hidden="true" /></span>
+                            <span className="link-item-text">
+                                <strong>Rapport hebdomadaire</strong>
+                                <small>Synthèse et export XLSX</small>
+                            </span>
+                            <ArrowRight className="link-item-arrow" size={16} aria-hidden="true" />
+                        </Link>
+
+                        <Link to="/reports/month" className="homepage-link-item">
+                            <span className="link-item-icon"><BarChart3 size={18} aria-hidden="true" /></span>
+                            <span className="link-item-text">
+                                <strong>Récapitulatif mensuel</strong>
+                                <small>Historique du mois</small>
+                            </span>
+                            <ArrowRight className="link-item-arrow" size={16} aria-hidden="true" />
+                        </Link>
+                    </nav>
+                </main>
+            </div>
+
             <Footer />
         </div>
     );
