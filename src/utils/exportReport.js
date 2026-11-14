@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
+import XLSX from "xlsx-js-style";
 
 /* =========================================================
    NUMBER → FRENCH WORDS  (for Ariary total)
@@ -216,6 +216,8 @@ export function exportWeeklyReportXLSX({
     return Number.isFinite(value) ? value : "";
   };
 
+  const csbValue = String(exportData.csb ?? user.workAt ?? "").trim();
+
   const stock = {
     OF: exportData.stock?.OF ?? "",
     RCS: exportData.stock?.RCS ?? "",
@@ -227,11 +229,11 @@ export function exportWeeklyReportXLSX({
   const rows = [
     ["Rapport hebdomadaire du projet Couverture de soins au niveau CSB"],
     ["District:", exportData.district ?? "NOSY-VARIKA"],
-    ["CSB:", exportData.csb ?? user.workAt ?? ""],
+    ["CSB:", csbValue],
     ["Nom et prénom (s) de l'APF:", user.name || user.fullName || ""],
     [],
     [],
-    ["Factures"],
+    ["FACTURES"],
     ["", ...weeklyDates.map((date) => formatShortDate(date))],
     [
       "Montant de la facture journalière",
@@ -264,7 +266,7 @@ export function exportWeeklyReportXLSX({
     ["Intrants rupture à la PhaGeCom", exportData.intrants || ""],
     [],
     [],
-    ["Outils de Gestion"],
+    ["OUTILS DE GESTION"],
     ["", "OF", "RCS", "Ticket blanc", "Ticket bleu", "PreRUMER"],
     [
       "Quantité en stock",
@@ -277,19 +279,112 @@ export function exportWeeklyReportXLSX({
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
+  const maxInvoiceCol = Math.max(5, weeklyDates.length);
+
+  const thinBorder = {
+    top: { style: "thin", color: { rgb: "000000" } },
+    bottom: { style: "thin", color: { rgb: "000000" } },
+    left: { style: "thin", color: { rgb: "000000" } },
+    right: { style: "thin", color: { rgb: "000000" } },
+  };
+
+  const ensureCell = (r, c) => {
+    const addr = XLSX.utils.encode_cell({ r, c });
+    if (!worksheet[addr]) {
+      worksheet[addr] = { t: "s", v: "" };
+    }
+    return worksheet[addr];
+  };
+
+  const applyCellStyle = (r, c, style) => {
+    const cell = ensureCell(r, c);
+    cell.s = {
+      ...(cell.s || {}),
+      ...style,
+    };
+  };
+
+  // 1. Merge A1:F1, center align, bold text
+  worksheet["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+  for (let c = 0; c <= 5; c++) {
+    applyCellStyle(0, c, {
+      font: { bold: true, sz: 12 },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+    });
+  }
+
+  // 2. Make A2:A4 bold text
+  for (let r = 1; r <= 3; r++) {
+    applyCellStyle(r, 0, {
+      font: { bold: true },
+    });
+  }
+
+  // 3. Make A7 bold text and uppercase ("FACTURES")
+  applyCellStyle(6, 0, {
+    font: { bold: true },
+  });
+
+  // 4. Add table border to A8:F14 (and any extra date columns if range > 5 days)
+  for (let r = 7; r <= 13; r++) {
+    for (let c = 0; c <= maxInvoiceCol; c++) {
+      const style = { border: thinBorder };
+      if (r === 7 && c > 0) {
+        style.font = { bold: true };
+        style.alignment = { horizontal: "center", vertical: "center" };
+      }
+      applyCellStyle(r, c, style);
+    }
+  }
+
+  // 5. Highlight high averageCost cells (> 3500) on row 12 (r = 11)
+  for (let c = 1; c <= maxInvoiceCol; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 11, c });
+    const cell = worksheet[addr];
+    if (cell && typeof cell.v === "number" && cell.v > 3500) {
+      applyCellStyle(11, c, {
+        fill: { patternType: "solid", fgColor: { rgb: "FEE2E2" } },
+        font: { bold: true, color: { rgb: "B91C1C" } },
+      });
+    }
+  }
+
+  // 6. Make A17 bold text and uppercase ("OUTILS DE GESTION")
+  applyCellStyle(16, 0, {
+    font: { bold: true },
+  });
+
+  // 7. Add table border to A18:F19
+  for (let r = 17; r <= 18; r++) {
+    for (let c = 0; c <= 5; c++) {
+      const style = { border: thinBorder };
+      if (r === 17 && c > 0) {
+        style.font = { bold: true };
+        style.alignment = { horizontal: "center", vertical: "center" };
+      }
+      applyCellStyle(r, c, style);
+    }
+  }
+
+  worksheet["!ref"] = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: 18, c: maxInvoiceCol },
+  });
+  worksheet["!rows"] = [{ hpt: 24 }];
   worksheet["!cols"] = [
-    { wch: 28 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 18 },
+    { wch: 38 },
+    ...Array.from({ length: maxInvoiceCol }, () => ({ wch: 18 })),
   ];
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Rapport hebdo");
 
-  const filename = `rapport_hebdo_${startDate}_au_${endDate || startDate}.xlsx`;
+  // 8. Prefix export filename with CSB value
+  const sanitizedCsb = csbValue
+    .replace(/[\\/:*?"<>|\s]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const csbPrefix = sanitizedCsb ? `${sanitizedCsb}_` : "";
+  const filename = `${csbPrefix}rapport_hebdo_${startDate}_au_${endDate || startDate}.xlsx`;
   XLSX.writeFile(workbook, filename);
 }
 
