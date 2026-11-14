@@ -546,6 +546,9 @@ const WeeklyReports = () => {
                                                     onChange={(e) => setExportForm((prev) => ({ ...prev, intrants: e.target.value }))}
                                                 />
                                             </div>
+                                            <div className="form-section-title full-width">
+                                                <h4>Stock outils de gestion</h4>
+                                            </div>
                                             <div className="form-group">
                                                 <label htmlFor="export-of">OF</label>
                                                 <input

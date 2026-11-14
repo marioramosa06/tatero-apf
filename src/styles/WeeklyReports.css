@@ -477,6 +477,19 @@
   padding: 1.5rem;
 }
 
+.form-section-title {
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.form-section-title h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
