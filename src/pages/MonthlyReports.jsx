@@ -440,6 +440,28 @@ const MonthlyReports = () => {
                                     </div>
                                 </div>
 
+                                <div className="monthly-export-summary" aria-label="Totaux à exporter">
+                                    <p className="monthly-export-summary-title">Récapitulatif à confirmer</p>
+                                    <dl className="monthly-export-totals">
+                                        <div>
+                                            <dt>Factures</dt>
+                                            <dd className="tabular-nums">{invoices.length}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Patients</dt>
+                                            <dd className="tabular-nums">{totalPatients.toLocaleString("fr-FR")}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Ordonnances (OF)</dt>
+                                            <dd className="tabular-nums">{totalOrdonnances.toLocaleString("fr-FR")}</dd>
+                                        </div>
+                                        <div>
+                                            <dt>Montant total</dt>
+                                            <dd className="tabular-nums">{Math.round(totalAmount).toLocaleString("fr-FR")} Ar</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+
                                 <div className="modal-actions">
                                     <button type="button" className="btn-secondary" onClick={closeExportModal} disabled={isExporting}>
                                         Annuler
