@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAuthHeaders } from "../utils/authHeaders";
 import { exportWeeklyReportXLSX } from "../utils/exportReport";
 import { Link } from "react-router-dom";
@@ -70,6 +70,8 @@ const WeeklyReports = () => {
     const [modalError, setModalError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [profileUser, setProfileUser] = useState(null);
+    const hasEditedCsbRef = useRef(false);
     const [exportForm, setExportForm] = useState({
         district: "NOSY-VARIKA",
         csb: user?.workAt || "",
@@ -140,8 +142,50 @@ const WeeklyReports = () => {
         setModalError(null);
     };
 
+    useEffect(() => {
+        if (!token) return;
+        const controller = new AbortController();
+
+        const fetchUserWorkAt = async () => {
+            try {
+                const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/profile", {
+                    headers: getAuthHeaders(token),
+                    signal: controller.signal
+                });
+                if (!response.ok) return;
+
+                const data = await response.json().catch(() => null);
+                if (!data) return;
+
+                const profile = data.user || data;
+                setProfileUser(profile);
+
+                if (profile?.workAt && !hasEditedCsbRef.current) {
+                    setExportForm((prev) => ({
+                        ...prev,
+                        csb: profile.workAt
+                    }));
+                }
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    // Fallback to cached user.workAt if profile request fails
+                }
+            }
+        };
+
+        fetchUserWorkAt();
+        return () => controller.abort();
+    }, [token]);
+
     const openExportModal = () => {
         setExportModalOpen(true);
+
+        if (!hasEditedCsbRef.current) {
+            const workAt = profileUser?.workAt || user?.workAt;
+            if (workAt) {
+                setExportForm((prev) => (prev.csb ? prev : { ...prev, csb: workAt }));
+            }
+        }
     };
 
     const closeExportModal = () => {
@@ -153,7 +197,7 @@ const WeeklyReports = () => {
             startDate,
             endDate,
             invoices,
-            user: user || {},
+            user: profileUser || user || {},
             exportData: {
                 district: exportForm.district,
                 csb: exportForm.csb,
@@ -534,7 +578,10 @@ const WeeklyReports = () => {
                                                     id="export-csb"
                                                     type="text"
                                                     value={exportForm.csb}
-                                                    onChange={(e) => setExportForm((prev) => ({ ...prev, csb: e.target.value }))}
+                                                    onChange={(e) => {
+                                                        hasEditedCsbRef.current = true;
+                                                        setExportForm((prev) => ({ ...prev, csb: e.target.value }));
+                                                    }}
                                                 />
                                             </div>
                                             <div className="form-group full-width">
