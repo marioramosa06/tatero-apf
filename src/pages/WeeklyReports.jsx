@@ -509,7 +509,7 @@ const WeeklyReports = () => {
                                     onClick={openExportModal}
                                 >
                                     <Download size={16} aria-hidden="true" />
-                                    <span>Exporter XLSX</span>
+                                    <span>Exporter Excel</span>
                                 </button>
                             </div>
 
@@ -667,7 +667,7 @@ const WeeklyReports = () => {
                                                 Annuler
                                             </button>
                                             <button type="button" className="submit-btn" onClick={handleWeeklyExport}>
-                                                <Download size={16} aria-hidden="true" /> Exporter XLSX
+                                                <Download size={16} aria-hidden="true" /> Exporter Excel
                                             </button>
                                         </div>
                                     </div>

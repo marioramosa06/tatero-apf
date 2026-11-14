@@ -149,7 +149,7 @@ const About = () => {
                                 <CheckCircle2 className="feature-icon" aria-hidden="true" />
                             </div>
                             <h3>Synthèses et exports</h3>
-                            <p>Regroupement par semaine et par mois avec export XLSX prêt pour le suivi administratif.</p>
+                            <p>Regroupement par semaine et par mois avec export Excel prêt pour le suivi administratif.</p>
                         </div>
                     </section>
 

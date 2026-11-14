@@ -87,7 +87,7 @@ const Homepage = () => {
                             <span className="link-item-icon"><CalendarDays size={18} aria-hidden="true" /></span>
                             <span className="link-item-text">
                                 <strong>Rapport hebdomadaire</strong>
-                                <small>Synthèse et export XLSX</small>
+                                <small>Synthèse et export Excel</small>
                             </span>
                             <ArrowRight className="link-item-arrow" size={16} aria-hidden="true" />
                         </Link>
