@@ -87,15 +87,17 @@ const Dashboard = () => {
             <div className="dashboard-page report-container">
                 <header className="report-header">
                     <Link to="/" className="back-link">
-                        <ArrowLeft className="back-icon" /> Retour à l'accueil
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
                     </Link>
                     <div className="header-title-wrapper">
-                        <span className="report-badge">Tableau de bord</span>
+                        <p className="report-kicker">
+                            Tableau de bord <span aria-hidden="true">·</span> <span className="month-capitalize">{monthName}</span>
+                        </p>
                         <h1 className="report-title">
                             Bonjour{user?.name ? `, ${user.name}` : ""}
                         </h1>
                         <p className="report-subtitle">
-                            Voici le résumé de votre activité pour {monthName}.
+                            Résumé de votre activité pour le mois en cours.
                         </p>
                     </div>
                 </header>
@@ -104,13 +106,13 @@ const Dashboard = () => {
                     <section className="dashboard-metrics" aria-label="Résumé du mois">
                         {metrics.map(({ label, value, icon: Icon }) => (
                             <article className="dashboard-metric" key={label}>
-                                <span className="dashboard-metric-icon"><Icon aria-hidden="true" /></span>
-                                <div>
+                                <div className="dashboard-metric-top">
                                     <p>{label}</p>
-                                    {loading
-                                        ? <span className="dashboard-metric-loading" role="status">Chargement...</span>
-                                        : <strong>{value}</strong>}
+                                    <span className="dashboard-metric-icon"><Icon aria-hidden="true" /></span>
                                 </div>
+                                {loading
+                                    ? <span className="dashboard-metric-loading" role="status">Chargement...</span>
+                                    : <strong className="tabular-nums">{value}</strong>}
                             </article>
                         ))}
                     </section>
@@ -119,10 +121,7 @@ const Dashboard = () => {
 
                     <section className="dashboard-shortcuts" aria-labelledby="dashboard-shortcuts-title">
                         <div className="dashboard-section-heading">
-                            <div>
-                                <span className="dashboard-section-eyebrow">Accès rapide</span>
-                                <h2 id="dashboard-shortcuts-title">Gérer votre activité</h2>
-                            </div>
+                            <h2 id="dashboard-shortcuts-title">Accès rapide</h2>
                         </div>
                         <div className="dashboard-shortcut-grid">
                             <Link to="/invoices/new" className="dashboard-shortcut">

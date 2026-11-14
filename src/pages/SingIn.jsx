@@ -7,7 +7,7 @@ import {
     LogIn,
     Loader
 } from "lucide-react";
-import "../styles/DailyReports.css"; // Reuses shared form styles
+import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 import PasswordInput from "../components/PasswordInput";
@@ -132,84 +132,83 @@ const SignIn = () => {
     };
 
     return (
-        <div className="report-container">
-            <header className="report-header">
-                <Link to="/" className="back-link">
-                    <ArrowLeft className="back-icon" /> Retour à l'accueil
-                </Link>
-                <div className="header-title-wrapper">
-                    <span className="report-badge">Espace Utilisateur</span>
-                    <h1 className="report-title">Connexion</h1>
-                    <p className="report-subtitle">
-                        Connectez-vous à votre compte pour gérer vos factures.
-                    </p>
-                </div>
-            </header>
+        <>
+            <div className="report-container auth-container">
+                <header className="report-header">
+                    <Link to="/" className="back-link">
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
+                    </Link>
+                    <div className="header-title-wrapper">
+                        <p className="report-kicker">Espace utilisateur</p>
+                        <h1 className="report-title">Connexion</h1>
+                        <p className="report-subtitle">
+                            Connectez-vous à votre compte pour gérer vos factures.
+                        </p>
+                    </div>
+                </header>
 
-            <main className="form-card">
-                <form className="report-form" onSubmit={handleSubmit} noValidate>
-                    <div className="form-grid">
-                        {/* Email */}
-                        <div className="form-group full-width">
-                            <label htmlFor="email">
-                                <Mail className="field-icon" />
-                                Adresse Email
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="rakoto@mailaka.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
+                <main className="form-card">
+                    <form className="report-form" onSubmit={handleSubmit} noValidate>
+                        <div className="form-grid">
+                            <div className="form-group full-width">
+                                <label htmlFor="email">
+                                    <Mail className="field-icon" aria-hidden="true" />
+                                    Adresse email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder="rakoto@mailaka.com"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group full-width">
+                                <label htmlFor="password">
+                                    <Lock className="field-icon" aria-hidden="true" />
+                                    Mot de passe
+                                </label>
+                                <PasswordInput
+                                    id="password"
+                                    name="password"
+                                    placeholder="Votre mot de passe"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                />
+                            </div>
                         </div>
 
-                        {/* Mot de passe */}
-                        <div className="form-group full-width">
-                            <label htmlFor="password">
-                                <Lock className="field-icon" />
-                                Mot de passe
-                            </label>
-                            <PasswordInput
-                                id="password"
-                                name="password"
-                                placeholder="Votre mot de passe"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
+                        {error && <span className="alert error" role="alert">{error}</span>}
+                        {success && <span className="alert success" role="status">{success}</span>}
+
+                        <div className="form-actions">
+                            <button
+                                type="submit"
+                                className={`submit-btn ${isPending ? "submitting" : ""}`}
+                                disabled={isPending}
+                            >
+                                {!isPending ? (
+                                    <LogIn className="btn-icon" aria-hidden="true" />
+                                ) : (
+                                    <Loader className="btn-icon spin" aria-hidden="true" />
+                                )}
+                                {!isPending ? "Se connecter" : "Connexion en cours..."}
+                            </button>
                         </div>
-                    </div>
 
-                    {error && <span className="alert error">{error}</span>}
-                    {success && <span className="alert success">{success}</span>}
-
-                    <div className="form-actions">
-                        <button
-                            type="submit"
-                            className={`submit-btn ${isPending ? "submitting" : ""}`}
-                            disabled={isPending}
-                        >
-                            {!isPending ? (
-                                <LogIn className="btn-icon" />
-                            ) : (
-                                <Loader className="btn-icon spin" />
-                            )}
-                            {!isPending ? "Se connecter" : "Connexion en cours..."}
-                        </button>
-                    </div>
-
-                    <p style={{ textAlign: "center", fontSize: "0.875rem", color: "var(--text-muted)", marginTop: "1rem" }}>
-                        Vous n'avez pas encore de compte ?{" "}
-                        <Link to="/signup" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
-                            Inscrivez-vous ici
-                        </Link>
-                    </p>
-                </form>
-            </main>
-
+                        <p className="auth-footer-note">
+                            Vous n'avez pas encore de compte ?{" "}
+                            <Link to="/signup" className="auth-footer-link">
+                                Inscrivez-vous ici
+                            </Link>
+                        </p>
+                    </form>
+                </main>
+            </div>
             <Footer />
-        </div>
+        </>
     );
 };
 

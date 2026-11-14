@@ -12,6 +12,7 @@ import {
     Download
 } from "lucide-react";
 import "../styles/WeeklyReports.css";
+import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 
 const toDateInputValue = (date) => {
@@ -37,9 +38,9 @@ const getWorkWeekRange = (value) => {
 };
 
 const WeeklyReports = () => {
-    const { token, user } = useAuth()
-    const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())))
-    const { startDate, endDate } = dateRange
+    const { token, user } = useAuth();
+    const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())));
+    const { startDate, endDate } = dateRange;
 
     const formatDate = (value) => {
         if (!value) return "";
@@ -51,11 +52,9 @@ const WeeklyReports = () => {
         });
     };
 
-    // Weekly invoices state
     const [invoices, setInvoices] = useState(null);
 
-    // Modal state for View/Edit
-    const [activeModal, setActiveModal] = useState(null); // { mode: 'view' | 'edit', invoice: obj }
+    const [activeModal, setActiveModal] = useState(null);
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -73,15 +72,12 @@ const WeeklyReports = () => {
         },
     });
 
-    // Calculate aggregated weekly summary
     const [totalAmount, setTotalAmount] = useState(0);
     const [totalPatient, setTotalPatient] = useState(0);
-    const [totalOf, setTotalOf] = useState(0)
-    const weeklyAvgCost = totalPatient > 0 ? Math.round(totalAmount / totalPatient) : "0.00";
+    const [totalOf, setTotalOf] = useState(0);
+    const weeklyAvgCost = totalPatient > 0 ? Math.round(totalAmount / totalPatient) : 0;
 
-    //Loading state
-    const [loading, setLoading] = useState(true)
-    //error
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const handleDateChange = (e) => {
@@ -93,7 +89,6 @@ const WeeklyReports = () => {
         setInvoices(null);
     };
 
-    // Open View / Edit Modal
     const handleOpenModal = (invoice, mode) => {
         setActiveModal({ mode, invoice });
         setModalFormData({ ...invoice });
@@ -130,7 +125,6 @@ const WeeklyReports = () => {
         closeExportModal();
     };
 
-    // Save edited invoice
     const handleModalSubmit = async (e) => {
         e.preventDefault();
         setModalError(null);
@@ -199,8 +193,8 @@ const WeeklyReports = () => {
             setTotalPatient((prev) => prev + Number(updatedInvoice.nbP || 0) - Number(originalInvoice.nbP || 0));
             setTotalOf((prev) => prev + Number(updatedInvoice.nbOf || 0) - Number(originalInvoice.nbOf || 0));
             handleCloseModal();
-        } catch (error) {
-            setModalError(error.message);
+        } catch (err) {
+            setModalError(err.message);
         } finally {
             setIsSaving(false);
         }
@@ -222,44 +216,40 @@ const WeeklyReports = () => {
                 return data;
             })
             .then((dat) => {
-                setTotalAmount(0)
-                setTotalPatient(0)
-                setTotalOf(0)
+                setTotalAmount(0);
+                setTotalPatient(0);
+                setTotalOf(0);
 
-                setInvoices(dat)
+                setInvoices(dat);
                 dat.forEach(element => {
-                    setTotalAmount(prev => prev + Number(element.amount || 0))
-                    setTotalPatient(prev => prev + Number(element.nbP || 0))
-                    setTotalOf(prev => prev + Number(element.nbOf || 0))
+                    setTotalAmount(prev => prev + Number(element.amount || 0));
+                    setTotalPatient(prev => prev + Number(element.nbP || 0));
+                    setTotalOf(prev => prev + Number(element.nbOf || 0));
                 });
-
             }).catch(err => {
-                console.log(err.message);
-                setError(err.message)
-                setLoading(false)
+                setError(err.message);
+                setLoading(false);
             }).finally(() => {
-                setLoading(false)
-            })
-    }, [startDate, endDate, token])
+                setLoading(false);
+            });
+    }, [startDate, endDate, token]);
 
     return (
         <>
             <div className="report-container">
-                {/* Header */}
                 <header className="report-header">
                     <Link to="/" className="back-link">
-                        <ArrowLeft className="back-icon" /> Retour à l'accueil
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
                     </Link>
                     <div className="header-title-wrapper">
-                        <span className="report-badge">Rapport Hebdo</span>
+                        <p className="report-kicker">Rapport hebdomadaire</p>
                         <h1 className="report-title">Facture de la semaine</h1>
                         <p className="report-subtitle">
-                            Sélectionnez une date : la période sera automatiquement réglée du lundi au vendredi.
+                            Sélectionnez une date : la période est automatiquement réglée du lundi au vendredi.
                         </p>
                     </div>
                 </header>
 
-                {/* Week Selector Box */}
                 <section className="week-picker-card">
                     <div className="week-picker-heading">
                         <span className="week-picker-icon">
@@ -296,6 +286,7 @@ const WeeklyReports = () => {
                         <strong>{`${formatDate(startDate)} au ${formatDate(endDate)}`}</strong>
                     </div>
                 </section>
+
                 {loading && (
                     <div className="weekly-report-skeleton" role="status" aria-label="Chargement du rapport hebdomadaire">
                         <span className="sr-only">Chargement du rapport hebdomadaire...</span>
@@ -315,9 +306,11 @@ const WeeklyReports = () => {
                                 <table className="weekly-table">
                                     <thead>
                                         <tr>
-                                            {["Date", "Patients", "Ordonnances", "Montant Total", "Coût Moyen"].map((heading) => (
-                                                <th key={heading}>{heading}</th>
-                                            ))}
+                                            <th>Date</th>
+                                            <th className="num-col">Patients</th>
+                                            <th className="num-col">Ordonnances</th>
+                                            <th className="num-col">Montant total</th>
+                                            <th className="num-col">Coût moyen</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -334,54 +327,64 @@ const WeeklyReports = () => {
                         </section>
                     </div>
                 )}
-                {!loading && !error && !invoices && <div className="no-data"> <DatabaseXIcon /> <span>Aucun données disponible</span> </div>}
-                {error && <div className="alert error">{error}</div>}
 
-                {!loading && invoices &&
+                {!loading && !error && !invoices && (
+                    <div className="no-data">
+                        <DatabaseXIcon aria-hidden="true" />
+                        <span>Aucune donnée disponible</span>
+                    </div>
+                )}
+
+                {error && <div className="alert error" role="alert">{error}</div>}
+
+                {!loading && invoices && (
                     <>
-                        {/* Weekly Summary Cards */}
                         <section className="summary-grid">
-                            <div className="summary-card card-primary">
+                            <div className="summary-card">
                                 <div className="summary-content">
-                                    <span className="summary-label">Montant Total</span>
+                                    <span className="summary-label">Montant total</span>
                                     <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
 
-                            <div className="summary-card card-secondary">
+                            <div className="summary-card">
                                 <div className="summary-content">
-                                    <span className="summary-label">Patients Cumulés</span>
-                                    <h3 className="summary-value">{totalPatient}</h3>
+                                    <span className="summary-label">Patients cumulés</span>
+                                    <h3 className="summary-value">{totalPatient.toLocaleString("fr-FR")}</h3>
                                 </div>
                             </div>
 
-                            <div className="summary-card card-tertiary">
+                            <div className="summary-card">
                                 <div className="summary-content">
-                                    <span className="summary-label">Ordonnances Facturées</span>
-                                    <h3 className="summary-value">{totalOf}</h3>
+                                    <span className="summary-label">Ordonnances facturées</span>
+                                    <h3 className="summary-value">{totalOf.toLocaleString("fr-FR")}</h3>
                                 </div>
                             </div>
 
-                            <div className="summary-card card-info">
+                            <div className="summary-card">
                                 <div className="summary-content">
-                                    <span className="summary-label">Coût Moyen / Patient</span>
+                                    <span className="summary-label">Coût moyen / patient</span>
                                     <h3 className="summary-value">{weeklyAvgCost.toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
                         </section>
 
-                        {/* Invoices List Table */}
                         <main className="table-card">
-                            <div className="table-header flex-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <h2>Factures enregistrées (Lundi - Vendredi)</h2>
+                            <div className="table-header flex-header">
+                                <h2>
+                                    Factures enregistrées{" "}
+                                    <span className="table-count">
+                                        · {invoices.length} {invoices.length > 1 ? "entrées" : "entrée"}
+                                    </span>
+                                </h2>
                                 <button
                                     type="button"
                                     className="action-btn export-btn"
                                     title="Exporter le rapport"
                                     onClick={openExportModal}
                                 >
-                                    <Download size={18} />
-                                    <span> Exporter</span>
+                                    <Download size={16} aria-hidden="true" />
+                                    <span>Exporter XLSX</span>
                                 </button>
                             </div>
 
@@ -389,47 +392,35 @@ const WeeklyReports = () => {
                                 <table className="weekly-table">
                                     <thead>
                                         <tr>
-                                            {/* <th>Jour</th> */}
                                             <th>Date</th>
-                                            <th>Patients</th>
-                                            <th>Ordonnances</th>
-                                            <th>Montant Total</th>
-                                            <th>Coût Moyen</th>
-                                            {/* <th>Actions</th> */}
+                                            <th className="num-col">Patients</th>
+                                            <th className="num-col">Ordonnances</th>
+                                            <th className="num-col">Montant total</th>
+                                            <th className="num-col">Coût moyen</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {invoices.map((inv) => (
-                                            <tr key={inv.id} onClick={() => handleOpenModal(inv, 'edit')}>
-                                                {/* <td className="day-cell">
-                                                    <strong>{inv.dayName}</strong>
-                                                </td> */}
-                                                <td>{inv.date.split("T")[0]}</td>
-                                                <td className="nb-cell">{inv.nbP}</td>
-                                                <td className="nb-cell">{inv.nbOf}</td>
-                                                <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
-                                                <td className={`avg-cell ${parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}`}>
-                                                    {inv.averageCost.toLocaleString("fr-FR")} Ar
-                                                </td>
-                                                {/* <td className="actions-cell">
-                                            <button
-                                                className="action-btn view-btn"
-                                                onClick={() => handleOpenModal(inv, 'view')}
-                                                title="Consulter"
-                                            >
-                                                <Eye size={16} />
-                                                Voir
-                                            </button>
-                                            <button
-                                                className="action-btn edit-btn"
-                                                onClick={() => handleOpenModal(inv, 'edit')}
-                                                title="Modifier"
-                                            >
-                                                <Edit3 size={16} /> Modifier
-                                            </button>
-                                        </td> */}
+                                        {invoices.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="5">Aucune facture enregistrée pour cette période.</td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            invoices.map((inv) => {
+                                                const isHigh = parseFloat(inv.averageCost) > 3500;
+                                                return (
+                                                    <tr key={inv.id ?? inv._id} onClick={() => handleOpenModal(inv, "edit")}>
+                                                        <td className="date-cell">{inv.date.split("T")[0]}</td>
+                                                        <td className="nb-cell">{inv.nbP}</td>
+                                                        <td className="nb-cell">{inv.nbOf}</td>
+                                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                                        <td className={`avg-cell ${isHigh ? "avg-high" : ""}`}>
+                                                            {Number(inv.averageCost).toLocaleString("fr-FR")} Ar
+                                                            {isHigh && <span className="avg-flag">(Élevé)</span>}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -440,40 +431,44 @@ const WeeklyReports = () => {
                                 <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                                     <div className="modal-header">
                                         <h3>Exporter le rapport hebdomadaire</h3>
-                                        <button type="button" className="close-btn" onClick={closeExportModal}>
-                                            <X size={20} />
+                                        <button type="button" className="close-btn" onClick={closeExportModal} aria-label="Fermer">
+                                            <X size={18} />
                                         </button>
                                     </div>
 
                                     <div className="modal-body">
                                         <div className="form-grid">
                                             <div className="form-group">
-                                                <label>District</label>
+                                                <label htmlFor="export-district">District</label>
                                                 <input
+                                                    id="export-district"
                                                     type="text"
                                                     value={exportForm.district}
                                                     onChange={(e) => setExportForm((prev) => ({ ...prev, district: e.target.value }))}
                                                 />
                                             </div>
                                             <div className="form-group">
-                                                <label>CSB</label>
+                                                <label htmlFor="export-csb">CSB</label>
                                                 <input
+                                                    id="export-csb"
                                                     type="text"
                                                     value={exportForm.csb}
                                                     onChange={(e) => setExportForm((prev) => ({ ...prev, csb: e.target.value }))}
                                                 />
                                             </div>
                                             <div className="form-group full-width">
-                                                <label>Intrants rupture à la PhaGeCom</label>
+                                                <label htmlFor="export-intrants">Intrants rupture à la PhaGeCom</label>
                                                 <textarea
+                                                    id="export-intrants"
                                                     rows="3"
                                                     value={exportForm.intrants}
                                                     onChange={(e) => setExportForm((prev) => ({ ...prev, intrants: e.target.value }))}
                                                 />
                                             </div>
                                             <div className="form-group">
-                                                <label>OF</label>
+                                                <label htmlFor="export-of">OF</label>
                                                 <input
+                                                    id="export-of"
                                                     type="number"
                                                     value={exportForm.stock.OF}
                                                     onChange={(e) => setExportForm((prev) => ({
@@ -484,8 +479,9 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>RCS</label>
+                                                <label htmlFor="export-rcs">RCS</label>
                                                 <input
+                                                    id="export-rcs"
                                                     type="number"
                                                     value={exportForm.stock.RCS}
                                                     onChange={(e) => setExportForm((prev) => ({
@@ -496,8 +492,9 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Ticket blanc</label>
+                                                <label htmlFor="export-tb">Ticket blanc</label>
                                                 <input
+                                                    id="export-tb"
                                                     type="number"
                                                     value={exportForm.stock.ticketBlanc}
                                                     onChange={(e) => setExportForm((prev) => ({
@@ -508,8 +505,9 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Ticket bleu</label>
+                                                <label htmlFor="export-tbleu">Ticket bleu</label>
                                                 <input
+                                                    id="export-tbleu"
                                                     type="number"
                                                     value={exportForm.stock.ticketBleu}
                                                     onChange={(e) => setExportForm((prev) => ({
@@ -520,8 +518,9 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>PreRUMER</label>
+                                                <label htmlFor="export-prerumer">PreRUMER</label>
                                                 <input
+                                                    id="export-prerumer"
                                                     type="number"
                                                     value={exportForm.stock.preRUMER}
                                                     onChange={(e) => setExportForm((prev) => ({
@@ -537,7 +536,7 @@ const WeeklyReports = () => {
                                                 Annuler
                                             </button>
                                             <button type="button" className="submit-btn" onClick={handleWeeklyExport}>
-                                                <Download size={18} /> Exporter XLSX
+                                                <Download size={16} aria-hidden="true" /> Exporter XLSX
                                             </button>
                                         </div>
                                     </div>
@@ -545,28 +544,27 @@ const WeeklyReports = () => {
                             </div>
                         )}
 
-                        {/* View / Edit Modal */}
                         {activeModal && modalFormData && (
                             <div className="modal-backdrop" onClick={handleCloseModal}>
                                 <div className="modal-card" onClick={(e) => e.stopPropagation()}>
                                     <div className="modal-header">
                                         <h3>
-                                            {activeModal.mode === "edit" ? "Modifier la Facture" : "Détails de la Facture"}
+                                            {activeModal.mode === "edit" ? "Modifier la facture" : "Détails de la facture"}
                                         </h3>
-                                        <button className="close-btn" onClick={handleCloseModal}>
-                                            <X size={20} />
+                                        <button type="button" className="close-btn" onClick={handleCloseModal} aria-label="Fermer">
+                                            <X size={18} />
                                         </button>
                                     </div>
 
                                     <form onSubmit={handleModalSubmit} className="modal-body" noValidate>
                                         <div className="form-grid">
                                             <div className="form-group">
-                                                <label>Jour / Date :</label>
-                                                <input type="text" value={`${modalFormData.dayName} (${modalFormData.date})`} disabled />
+                                                <label>Date</label>
+                                                <input type="text" value={`${modalFormData.dayName ? `${modalFormData.dayName} ` : ""}(${String(modalFormData.date).slice(0, 10)})`} disabled />
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Nombre de patients :</label>
+                                                <label>Nombre de patients</label>
                                                 <input
                                                     type="number"
                                                     value={modalFormData.nbP}
@@ -579,7 +577,7 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Ordonnances :</label>
+                                                <label>Ordonnances</label>
                                                 <input
                                                     type="number"
                                                     value={modalFormData.nbOf}
@@ -592,7 +590,7 @@ const WeeklyReports = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label>Montant total (Ar) :</label>
+                                                <label>Montant total (Ar)</label>
                                                 <input
                                                     type="number"
                                                     step="0.01"
@@ -609,7 +607,7 @@ const WeeklyReports = () => {
 
                                             {parseFloat(modalFormData.amount / (modalFormData.nbP || 1)) > 3500 && (
                                                 <div className="form-group full-width">
-                                                    <label>Commentaire (Requis) :</label>
+                                                    <label>Commentaire (Requis)</label>
                                                     <textarea
                                                         rows="3"
                                                         value={modalFormData.comment}
@@ -629,7 +627,7 @@ const WeeklyReports = () => {
                                             </button>
                                             {activeModal.mode === "edit" && (
                                                 <button type="submit" className="submit-btn" disabled={isSaving}>
-                                                    <Check size={18} /> {isSaving ? "Enregistrement..." : "Enregistrer"}
+                                                    <Check size={16} aria-hidden="true" /> {isSaving ? "Enregistrement..." : "Enregistrer"}
                                                 </button>
                                             )}
                                         </div>
@@ -637,8 +635,10 @@ const WeeklyReports = () => {
                                 </div>
                             </div>
                         )}
-                    </>}
+                    </>
+                )}
             </div>
+            <Footer />
         </>
     );
 };

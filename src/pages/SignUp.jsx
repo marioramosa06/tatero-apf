@@ -10,7 +10,7 @@ import {
     Home,
     Users2
 } from "lucide-react";
-import "../styles/DailyReports.css"; // Reuses shared form styles
+import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 import PasswordInput from "../components/PasswordInput";
 
@@ -85,19 +85,17 @@ const SignUp = () => {
         setError(null);
         setSuccess(null);
 
-        // Client-side validation
-
         if (!formData.name.trim()) {
             setError("Veuillez saisir votre nom complet.");
             return;
         }
         if (formData.gender === "") {
-            setError("Veuillez selectionner votre genre.");
+            setError("Veuillez sélectionner votre genre.");
             return;
         }
 
         if (!formData.email.trim()) {
-            setError("Veuillez saisir adresse email.");
+            setError("Veuillez saisir votre adresse email.");
             return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
@@ -105,7 +103,7 @@ const SignUp = () => {
             return;
         }
         if (!formData.workAt.trim()) {
-            setError("Veuillez preciser votre lieu de travail.");
+            setError("Veuillez préciser votre lieu de travail.");
             return;
         }
 
@@ -153,163 +151,152 @@ const SignUp = () => {
     };
 
     return (
-        <div className="report-container">
-            <header className="report-header">
-                <Link to="/" className="back-link">
-                    <ArrowLeft className="back-icon" /> Retour à l'accueil
-                </Link>
-                <div className="header-title-wrapper">
-                    <span className="report-badge">Créer un compte</span>
-                    <h1 className="report-title">Inscription</h1>
-                    <p className="report-subtitle">
-                        Rejoignez Tatero pour enregistrer et suivre vos factures en toute simplicité.
-                    </p>
-                </div>
-            </header>
+        <>
+            <div className="report-container auth-container-wide">
+                <header className="report-header">
+                    <Link to="/" className="back-link">
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
+                    </Link>
+                    <div className="header-title-wrapper">
+                        <p className="report-kicker">Créer un compte</p>
+                        <h1 className="report-title">Inscription</h1>
+                        <p className="report-subtitle">
+                            Rejoignez Tatero pour enregistrer et suivre vos factures en toute simplicité.
+                        </p>
+                    </div>
+                </header>
 
-            <main className="form-card">
-                <form className="report-form" onSubmit={handleSubmit} noValidate>
-                    <div className="form-grid">
-                        {/* Nom complet */}
-                        <div className="form-group">
-                            <label htmlFor="name">
-                                <User className="field-icon" />
-                                Nom complet
-                            </label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                placeholder="ex: Rakotondrabe Koto"
-                                value={formData.name}
-                                onChange={handleChange}
+                <main className="form-card">
+                    <form className="report-form" onSubmit={handleSubmit} noValidate>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label htmlFor="name">
+                                    <User className="field-icon" aria-hidden="true" />
+                                    Nom complet
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    placeholder="ex: Rakotondrabe Koto"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                />
+                            </div>
 
-                            />
-                        </div>
+                            <div className="form-group">
+                                <span className="form-group-label" id="gender-label">
+                                    <Users2 className="field-icon" aria-hidden="true" />
+                                    Genre
+                                </span>
+                                <div className="gender-chip-group" role="group" aria-labelledby="gender-label">
+                                    {[
+                                        { value: "homme", label: "Homme" },
+                                        { value: "femme", label: "Femme" }
+                                    ].map(({ value, label }) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`gender-chip ${formData.gender === value ? "selected" : ""}`}
+                                            aria-pressed={formData.gender === value}
+                                            onClick={() => setFormData((prev) => ({ ...prev, gender: value }))}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                        {/* Genre */}
-                        <div className="form-group">
-                            <span className="form-group-label" id="gender-label">
-                                <Users2 className="field-icon" />
-                                Genre
-                            </span>
-                            <div className="gender-chip-group" role="group" aria-labelledby="gender-label">
-                                {[
-                                    { value: "homme", label: "Homme" },
-                                    { value: "femme", label: "Femme" }
-                                ].map(({ value, label }) => (
-                                    <button
-                                        key={value}
-                                        type="button"
-                                        className={`gender-chip ${formData.gender === value ? "selected" : ""}`}
-                                        aria-pressed={formData.gender === value}
-                                        onClick={() => setFormData((prev) => ({ ...prev, gender: value }))}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
+                            <div className="form-group">
+                                <label htmlFor="email">
+                                    <Mail className="field-icon" aria-hidden="true" />
+                                    Adresse email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder="ex: rakoto@mailaka.com"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="workAt">
+                                    <Home className="field-icon" aria-hidden="true" />
+                                    Lieu de travail
+                                </label>
+                                <input
+                                    type="text"
+                                    id="workAt"
+                                    name="workAt"
+                                    placeholder="ex: CSB1 Anivorano"
+                                    value={formData.workAt}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="password">
+                                    <Lock className="field-icon" aria-hidden="true" />
+                                    Mot de passe
+                                </label>
+                                <PasswordInput
+                                    id="password"
+                                    name="password"
+                                    placeholder="Nouveau mot de passe"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    minLength={6}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="confirmPassword">
+                                    <Lock className="field-icon" aria-hidden="true" />
+                                    Confirmer le mot de passe
+                                </label>
+                                <PasswordInput
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    placeholder="Confirmer le mot de passe"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    minLength={6}
+                                />
                             </div>
                         </div>
 
-                        {/* Email */}
-                        <div className="form-group ">
-                            <label htmlFor="email">
-                                <Mail className="field-icon" />
-                                Adresse Email
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="ex: rakoto@mailaka.com"
-                                value={formData.email}
-                                onChange={handleChange}
+                        {error && <span className="alert error" role="alert">{error}</span>}
+                        {success && <span className="alert success" role="status">{success}</span>}
 
-                            />
+                        <div className="form-actions">
+                            <button
+                                type="submit"
+                                className={`submit-btn ${isPending ? "submitting" : ""}`}
+                                disabled={isPending}
+                            >
+                                {!isPending ? (
+                                    <UserPlus className="btn-icon" aria-hidden="true" />
+                                ) : (
+                                    <Loader className="btn-icon spin" aria-hidden="true" />
+                                )}
+                                {!isPending ? "S'inscrire" : "Création du compte..."}
+                            </button>
                         </div>
 
-                        {/* lieu de travail */}
-                        <div className="form-group ">
-                            <label htmlFor="workAt">
-
-                                <Home className="field-icon" />
-                                Lieu de travail
-                            </label>
-                            <input
-                                type="text"
-                                id="workAt"
-                                name="workAt"
-                                placeholder="ex: CSB1 Anivorano"
-                                value={formData.workAt}
-                                onChange={handleChange}
-
-                            />
-                        </div>
-
-                        {/* Mot de passe */}
-                        <div className="form-group">
-                            <label htmlFor="password">
-                                <Lock className="field-icon" />
-                                Mot de passe
-                            </label>
-                            <PasswordInput
-                                id="password"
-                                name="password"
-                                placeholder="Nouveau mot de passe"
-                                value={formData.password}
-                                onChange={handleChange}
-                                minLength={6}
-
-                            />
-                        </div>
-
-                        {/* Confirmation Mot de passe */}
-                        <div className="form-group">
-                            <label htmlFor="confirmPassword">
-                                <Lock className="field-icon" />
-                                Confirmer le mot de passe
-                            </label>
-                            <PasswordInput
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                placeholder="Confirmer le mot de passe"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                minLength={6}
-
-                            />
-                        </div>
-                    </div>
-
-                    {error && <span className="alert error">{error}</span>}
-                    {success && <span className="alert success">{success}</span>}
-
-                    <div className="form-actions">
-                        <button
-                            type="submit"
-                            className={`submit-btn ${isPending ? "submitting" : ""}`}
-                            disabled={isPending}
-                        >
-                            {!isPending ? (
-                                <UserPlus className="btn-icon" />
-                            ) : (
-                                <Loader className="btn-icon spin" />
-                            )}
-                            {!isPending ? "S'inscrire" : "Création du compte..."}
-                        </button>
-                    </div>
-
-                    <p style={{ textAlign: "center", fontSize: "0.875rem", color: "var(--text-muted)", marginTop: "1rem" }}>
-                        Vous avez déjà un compte ?{" "}
-                        <Link to="/signin" style={{ color: "var(--primary)", fontWeight: 600, textDecoration: "none" }}>
-                            Connectez-vous ici
-                        </Link>
-                    </p>
-                </form>
-            </main>
-
+                        <p className="auth-footer-note">
+                            Vous avez déjà un compte ?{" "}
+                            <Link to="/signin" className="auth-footer-link">
+                                Connectez-vous ici
+                            </Link>
+                        </p>
+                    </form>
+                </main>
+            </div>
             <Footer />
-        </div>
+        </>
     );
 };
 

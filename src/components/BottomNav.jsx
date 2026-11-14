@@ -1,52 +1,34 @@
 import { NavLink } from "react-router-dom";
 import {
     Home,
-    LayoutDashboard,
     FilePlus,
     CalendarDays,
     BarChart3,
-    // Info,
-    CircleUserRound
 } from "lucide-react";
 import "../styles/BottomNav.css";
 
 const BottomNav = () => {
     return (
-        <nav className="bottom-appbar">
+        <nav className="bottom-appbar" aria-label="Navigation mobile">
             <NavLink to="/" end className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <Home className="bottom-nav-icon" />
+                <Home className="bottom-nav-icon" aria-hidden="true" />
                 <span className="bottom-nav-label">Accueil</span>
             </NavLink>
 
-            {/* <NavLink to="/dashboard" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <LayoutDashboard className="bottom-nav-icon" />
-                <span className="bottom-nav-label">Dashboard</span>
-            </NavLink> */}
-
             <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <FilePlus className="bottom-nav-icon" />
+                <FilePlus className="bottom-nav-icon" aria-hidden="true" />
                 <span className="bottom-nav-label">Jour</span>
             </NavLink>
 
             <NavLink to="/reports/week" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <CalendarDays className="bottom-nav-icon" />
+                <CalendarDays className="bottom-nav-icon" aria-hidden="true" />
                 <span className="bottom-nav-label">Semaine</span>
             </NavLink>
 
             <NavLink to="/reports/month" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <BarChart3 className="bottom-nav-icon" />
+                <BarChart3 className="bottom-nav-icon" aria-hidden="true" />
                 <span className="bottom-nav-label">Mois</span>
             </NavLink>
-
-            {/* <NavLink to="/profile" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <CircleUserRound className="bottom-nav-icon" />
-                <span className="bottom-nav-label">Profil</span>
-            </NavLink> */}
-
-            {/* <NavLink to="/about" className={({ isActive }) => isActive ? "bottom-nav-item active" : "bottom-nav-item"}>
-                <Info className="bottom-nav-icon" />
-                <span className="bottom-nav-label">À propos</span>
-            </NavLink> */}
         </nav>
     );
 };

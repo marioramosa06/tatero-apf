@@ -69,7 +69,7 @@ const Profile = () => {
             <div className="profile-page report-container">
                 <header className="report-header profile-header">
                     <div className="header-title-wrapper">
-                        <span className="report-badge">Espace personnel</span>
+                        <p className="report-kicker">Espace personnel</p>
                         <h1 className="report-title">Mon profil</h1>
                         <p className="report-subtitle">Vos informations de compte.</p>
                     </div>
@@ -86,7 +86,6 @@ const Profile = () => {
                                 <h2>{account.name || "Utilisateur"}</h2>
                                 <p>{account.email || "Adresse email non renseignée"}</p>
                             </div>
-                            {/* <span className="profile-status">Compte actif</span> */}
                         </div>
 
                         <dl className="profile-details">

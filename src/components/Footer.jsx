@@ -1,14 +1,3 @@
-import { Link } from "react-router-dom";
-import {
-    FilePlus,
-    CalendarDays,
-    BarChart3,
-    Info,
-    Heart,
-    // Github,
-    Globe,
-    Code
-} from "lucide-react";
 import "../styles/Footer.css";
 
 const Footer = () => {
@@ -16,18 +5,14 @@ const Footer = () => {
 
     return (
         <footer className="app-footer">
-
-            {/* Bottom Bar / Copyright */}
-            {/* <div className="footer-bottom"> */}
             <div className="bottom-container">
                 <p className="copyright-text">
-                    &copy; {currentYear} <strong>Tatero</strong>.
+                    &copy; {currentYear} Tatero
                 </p>
                 <p className="author-credit">
-                    By <strong>Mario Ramosa</strong>
+                    Par Mario Ramosa
                 </p>
             </div>
-            {/* </div> */}
         </footer>
     );
 };

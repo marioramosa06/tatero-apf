@@ -46,7 +46,6 @@ const DailyReports = () => {
         comment: ""
     });
 
-    // Auto-calculate Average Cost per Patient
     const calculateAverageCost = () => {
         const patients = parseFloat(formData.nbP);
         const totalAmount = parseFloat(formData.amount);
@@ -66,8 +65,6 @@ const DailyReports = () => {
             [name]: value
         }));
     };
-
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -100,10 +97,8 @@ const DailyReports = () => {
             ...formData,
             averageCost: calculateAverageCost(),
             user: user._id
-
         };
-        // console.log("Facture journalière soumise :", submissionData);
-        // Add your API call / submit logic here
+
         fetch("https://api-tatero-apf.vercel.app/api/invoices", {
             headers: {
                 "Content-Type": "application/json",
@@ -133,21 +128,17 @@ const DailyReports = () => {
                 setError(err.message)
                 setIsPending(false)
             })
-
     }
-
 
     return (
         <>
             <div className="report-container">
-
                 <header className="report-header">
                     <Link to="/" className="back-link">
-                        <ArrowLeft className="back-icon" /> Retour à l'accueil
-
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
                     </Link>
                     <div className="header-title-wrapper">
-                        <span className="report-badge">Facture Journalière </span>
+                        <p className="report-kicker">Facture journalière</p>
                         <h1 className="report-title">Enregistrer une facture</h1>
                         <p className="report-subtitle">
                             Saisissez les détails de la facture journalière pour enregistrer l'activité du jour.
@@ -156,14 +147,11 @@ const DailyReports = () => {
                 </header>
 
                 <main className="form-card">
-
-
                     <form className="report-form" onSubmit={handleSubmit} noValidate>
                         <div className="form-grid">
-                            {/* Date */}
                             <div className="form-group">
                                 <label htmlFor="date">
-                                    <Calendar className="field-icon" />
+                                    <Calendar className="field-icon" aria-hidden="true" />
                                     Date
                                 </label>
                                 <input
@@ -175,10 +163,9 @@ const DailyReports = () => {
                                 />
                             </div>
 
-                            {/* Nombre de patients */}
                             <div className="form-group">
                                 <label htmlFor="nbP">
-                                    <Users className="field-icon" />
+                                    <Users className="field-icon" aria-hidden="true" />
                                     Nombre de patients
                                 </label>
                                 <input
@@ -192,10 +179,9 @@ const DailyReports = () => {
                                 />
                             </div>
 
-                            {/* Nombre d'ordonnances facturées */}
                             <div className="form-group">
                                 <label htmlFor="nbOf">
-                                    <Receipt className="field-icon" />
+                                    <Receipt className="field-icon" aria-hidden="true" />
                                     Ordonnances facturées
                                 </label>
                                 <input
@@ -209,10 +195,9 @@ const DailyReports = () => {
                                 />
                             </div>
 
-                            {/* Montant Total */}
                             <div className="form-group">
                                 <label htmlFor="amount">
-                                    <Coins className="field-icon" />
+                                    <Coins className="field-icon" aria-hidden="true" />
                                     Montant total (Ar)
                                 </label>
                                 <input
@@ -227,53 +212,52 @@ const DailyReports = () => {
                                 />
                             </div>
 
-                            {/* Coût Moyen (Auto-calculated) */}
                             <div className="form-group full-width">
                                 <label htmlFor="averageCost">
-                                    <Calculator className="field-icon" />
-                                    Coût moyen par patient (Calculé)
+                                    <Calculator className="field-icon" aria-hidden="true" />
+                                    Coût moyen par patient (Ar)
                                 </label>
                                 <div className="input-readonly-wrapper">
                                     <input
                                         type="text"
                                         id="averageCost"
                                         name="averageCost"
-                                        value={`${calculateAverageCost()}`}
+                                        value={`${calculateAverageCost()} Ar`}
                                         readOnly
-                                        className="readonly-input"
+                                        className={`readonly-input${showCommentField ? " is-high" : ""}`}
                                     />
                                 </div>
                             </div>
 
-                            {/* Conditional Comment Field (Shown when averageCost > 3500) */}
-
-                            <div className="form-group full-width conditional-field animate-fade-in">
+                            <div className="form-group full-width conditional-field">
                                 <label htmlFor="comment">
-                                    <MessageSquareText className="field-icon" />
-                                    {`Commentaire ${showCommentField ? "(Requis : Coût moyen depasse le 3 500 Ar)" : ""}`}
+                                    <MessageSquareText className="field-icon" aria-hidden="true" />
+                                    {`Commentaire${showCommentField ? " (Requis : coût moyen > 3 500 Ar)" : ""}`}
                                 </label>
                                 <textarea
                                     id="comment"
                                     name="comment"
-                                    rows="5"
-                                    placeholder={`${showCommentField ? "Veuillez justifier ce coût moyen élevé..." : "Ajouter un commentaire si necessaire..."}`}
+                                    rows="4"
+                                    placeholder={showCommentField ? "Veuillez justifier ce coût moyen élevé..." : "Ajouter un commentaire si nécessaire..."}
                                     value={formData.comment}
                                     onChange={handleChange}
                                 ></textarea>
                             </div>
-
                         </div>
-                        {error && <span className="alert error">{error}</span>}
-                        {success && <span className="alert success">{success}</span>}
+
+                        {error && <span className="alert error" role="alert">{error}</span>}
+                        {success && <span className="alert success" role="status">{success}</span>}
+
                         <div className="form-actions">
                             <button type="submit" className={`submit-btn ${isPending ? "submitting" : ""}`} disabled={isPending}>
-                                {!isPending ? <Save className="btn-icon" /> : <Loader className="btn-icon spin" />} {!isPending ? "Enregitrer la facture" : "Enregistrement..."}
+                                {!isPending ? <Save className="btn-icon" aria-hidden="true" /> : <Loader className="btn-icon spin" aria-hidden="true" />}
+                                {!isPending ? "Enregistrer la facture" : "Enregistrement..."}
                             </button>
                         </div>
                     </form>
                 </main>
-                <Footer />
             </div>
+            <Footer />
         </>
     );
 };

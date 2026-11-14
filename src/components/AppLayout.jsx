@@ -11,7 +11,6 @@ const AppLayout = () => {
         "/reports/week",
         "/reports/month",
         "/profile",
-
     ];
 
     const shouldShowNav = showNavPaths.includes(location.pathname);
@@ -20,15 +19,11 @@ const AppLayout = () => {
         <div className="app-layout">
             {shouldShowNav && <Navbar />}
 
-            <main
-                className="app-main-content"
-                style={{ paddingBottom: shouldShowNav ? "88px" : "0" }}
-            >
+            <main className={`app-main-content${shouldShowNav ? " with-nav" : ""}`}>
                 <Outlet />
             </main>
 
             {shouldShowNav && <BottomNav />}
-
         </div>
     );
 };

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 import {
-    Eye,
-    Edit3,
     X,
     Check,
     FileText,
@@ -33,7 +31,6 @@ const formatDateFr = (dateStr) => {
 
 const MonthlyReports = () => {
     const { token } = useAuth();
-    // State for YYYY-MM selector
     const today = new Date();
     const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -42,8 +39,7 @@ const MonthlyReports = () => {
 
     const [invoices, setInvoices] = useState([]);
 
-    // Modal state
-    const [activeModal, setActiveModal] = useState(null); // { mode: 'view' | 'edit', invoice: obj }
+    const [activeModal, setActiveModal] = useState(null);
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
 
@@ -107,13 +103,11 @@ const MonthlyReports = () => {
         return () => controller.abort();
     }, [selectedMonth, token]);
 
-    // Handle month selection change
     const handleMonthChange = (e) => {
         const newMonth = e.target.value;
         if (newMonth) setSelectedMonth(newMonth);
     };
 
-    // Calculate aggregated metrics
     const totalAmount = invoices.reduce((acc, inv) => acc + Number(inv.amount || 0), 0);
     const totalPatients = invoices.reduce((acc, inv) => acc + Number(inv.nbP || 0), 0);
     const totalOrdonnances = invoices.reduce((acc, inv) => acc + Number(inv.nbOf || 0), 0);
@@ -121,18 +115,10 @@ const MonthlyReports = () => {
     const avgDailyAmount = totalDays > 0 ? (totalAmount / totalDays).toFixed(2) : "0.00";
     const overallAvgCost = totalPatients > 0 ? (totalAmount / totalPatients).toFixed(2) : "0.00";
 
-    // Format display for month title (e.g., "Octobre 2026")
     const getFormattedMonthTitle = () => {
         const [y, m] = selectedMonth.split("-");
         const date = new Date(y, m - 1);
         return date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
-    };
-
-    // Open View / Edit Modal
-    const handleOpenModal = (invoice, mode) => {
-        setActiveModal({ mode, invoice });
-        setModalFormData({ ...invoice });
-        setModalError(null);
     };
 
     const handleCloseModal = () => {
@@ -141,7 +127,6 @@ const MonthlyReports = () => {
         setModalError(null);
     };
 
-    // Save edited invoice
     const handleModalSubmit = (e) => {
         e.preventDefault();
         setModalError(null);
@@ -177,276 +162,246 @@ const MonthlyReports = () => {
     };
 
     return (
-        <div className="report-container">
-            {/* Header */}
-            <header className="report-header">
-                <Link to="/" className="back-link">
-                    <ArrowLeft className="back-icon" /> Retour à l'accueil
-                </Link>
-                <div className="header-title-wrapper">
-                    <span className="report-badge">Récap Mensuel</span>
-                    <h1 className="report-title">Facture du Mois</h1>
-                    <p className="report-subtitle">
-                        Consultez la synthèse globale, les statistiques et le détail de toutes les factures du mois.
-                    </p>
-                </div>
-            </header>
-
-            {/* Month Picker Box */}
-            <section className="monthly-picker-card" aria-label="Sélection de la période">
-                <div className="monthly-picker-heading">
-                    <span className="monthly-picker-icon" aria-hidden="true">
-                        <CalendarDays />
-                    </span>
-                    <div>
-                        <span className="monthly-picker-eyebrow">Période du rapport</span>
-                        <p>Choisissez le mois à consulter</p>
+        <>
+            <div className="report-container">
+                <header className="report-header">
+                    <Link to="/" className="back-link">
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour à l'accueil
+                    </Link>
+                    <div className="header-title-wrapper">
+                        <p className="report-kicker">Récapitulatif mensuel</p>
+                        <h1 className="report-title">Facture du mois</h1>
+                        <p className="report-subtitle">
+                            Consultez la synthèse globale, les statistiques et le détail des factures du mois.
+                        </p>
                     </div>
-                </div>
-                <div className="monthly-picker-control">
-                    <label htmlFor="monthSelect">Mois sélectionné</label>
-                    <input
-                        type="month"
-                        id="monthSelect"
-                        value={selectedMonth}
-                        onChange={handleMonthChange}
-                    />
-                </div>
-                {/* <div className="month-display-badge" aria-live="polite">
-                    <span className="month-display-dot" aria-hidden="true" />
-                    <div>
-                        <span>Vous consultez</span>
-                        <strong className="month-capitalize">{getFormattedMonthTitle()}</strong>
+                </header>
+
+                <section className="monthly-picker-card" aria-label="Sélection de la période">
+                    <div className="monthly-picker-heading">
+                        <span className="monthly-picker-icon" aria-hidden="true">
+                            <CalendarDays />
+                        </span>
+                        <div>
+                            <span className="monthly-picker-eyebrow">Période du rapport</span>
+                            <p>Choisissez le mois à consulter</p>
+                        </div>
                     </div>
-                </div> */}
-            </section>
-
-            {error && <div className="alert error" role="alert">{error}</div>}
-
-            {/* Monthly Summary Grid */}
-            <section className="summary-grid monthly-summary">
-                {loading ? (
-                    <div className="monthly-summary-skeleton" role="status" aria-label="Chargement du rapport mensuel">
-                        <span className="sr-only">Chargement du rapport mensuel...</span>
-                        {[1, 2, 3, 4, 5].map((item) => (
-                            <div className="summary-card skeleton-card" key={item} aria-hidden="true">
-                                <span className="skeleton-line skeleton-label" />
-                                <span className="skeleton-line skeleton-value" />
-                            </div>
-                        ))}
+                    <div className="monthly-picker-control">
+                        <label htmlFor="monthSelect">Mois sélectionné</label>
+                        <input
+                            type="month"
+                            id="monthSelect"
+                            value={selectedMonth}
+                            onChange={handleMonthChange}
+                        />
                     </div>
-                ) : (
-                    <>
-                        <div className="summary-card card-primary">
-                            <div className="summary-content">
-                                <span className="summary-label">Montant Total</span>
-                                <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
-                            </div>
+                </section>
+
+                {error && <div className="alert error" role="alert">{error}</div>}
+
+                <section className="summary-grid monthly-summary">
+                    {loading ? (
+                        <div className="monthly-summary-skeleton" role="status" aria-label="Chargement du rapport mensuel">
+                            <span className="sr-only">Chargement du rapport mensuel...</span>
+                            {[1, 2, 3, 4, 5].map((item) => (
+                                <div className="summary-card skeleton-card" key={item} aria-hidden="true">
+                                    <span className="skeleton-line skeleton-label" />
+                                    <span className="skeleton-line skeleton-value" />
+                                </div>
+                            ))}
                         </div>
-
-                        <div className="summary-card card-secondary">
-                            <div className="summary-content">
-                                <span className="summary-label">Patients du Mois</span>
-                                <h3 className="summary-value">{totalPatients}</h3>
+                    ) : (
+                        <>
+                            <div className="summary-card">
+                                <div className="summary-content">
+                                    <span className="summary-label">Montant total</span>
+                                    <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="summary-card card-tertiary">
-                            <div className="summary-content">
-                                <span className="summary-label">Total Ordonnances</span>
-                                <h3 className="summary-value">{totalOrdonnances}</h3>
+                            <div className="summary-card">
+                                <div className="summary-content">
+                                    <span className="summary-label">Patients du mois</span>
+                                    <h3 className="summary-value">{totalPatients.toLocaleString("fr-FR")}</h3>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="summary-card card-info">
-                            <div className="summary-content">
-                                <span className="summary-label">Moyenne / Jour</span>
-                                <h3 className="summary-value">{Number(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
+                            <div className="summary-card">
+                                <div className="summary-content">
+                                    <span className="summary-label">Total ordonnances</span>
+                                    <h3 className="summary-value">{totalOrdonnances.toLocaleString("fr-FR")}</h3>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="summary-card card-primary full-span-mobile">
-                            <div className="summary-content">
-                                <span className="summary-label">Coût Moyen / Patient</span>
-                                <h3 className="summary-value">{overallAvgCost} Ar</h3>
+                            <div className="summary-card">
+                                <div className="summary-content">
+                                    <span className="summary-label">Moyenne / jour</span>
+                                    <h3 className="summary-value">{Number(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
+                                </div>
                             </div>
-                        </div>
-                    </>
-                )}
-            </section>
 
-            {/* Monthly Invoices Table */}
-            <main className="table-card">
-                <div className="table-header">
-                    <h2>
-                        Historique des factures de <span className="month-capitalize">{getFormattedMonthTitle()}</span>
-                        {loading
-                            ? <span className="skeleton-line skeleton-count" aria-hidden="true" />
-                            : <span className="count-pill">{invoices.length} factures</span>}
-                    </h2>
-                </div>
+                            <div className="summary-card">
+                                <div className="summary-content">
+                                    <span className="summary-label">Coût moyen / patient</span>
+                                    <h3 className="summary-value">{Number(overallAvgCost).toLocaleString("fr-FR")} Ar</h3>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </section>
 
-                <div className="table-responsive">
-                    <table className="monthly-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Jour</th>
-                                <th>Patients</th>
-                                <th>Ordonnances</th>
-                                <th>Montant Total</th>
-                                <th>Coût Moyen</th>
-                                {/* <th>Commentaire</th> */}
-                                {/* <th>Actions</th> */}
-                            </tr>
-                        </thead>
-                        <tbody>
+                <main className="table-card">
+                    <div className="table-header">
+                        <h2>
+                            Historique de <span className="month-capitalize">{getFormattedMonthTitle()}</span>
                             {loading
-                                ? [1, 2, 3, 4, 5].map((row) => (
-                                    <tr key={row} aria-hidden="true">
-                                        {[1, 2, 3, 4, 5, 6, 7].map((cell) => (
-                                            <td key={cell}><span className="skeleton-line skeleton-cell" /></td>
-                                        ))}
-                                    </tr>
-                                ))
-                                : error
-                                    ? <tr><td colSpan="7">Les factures n'ont pas pu être chargées.</td></tr>
-                                    : invoices.length === 0
-                                        ? <tr><td colSpan="7">Aucune facture enregistrée pour ce mois.</td></tr>
-                                        : invoices.map((inv) => (
-                                            <tr key={inv.id}>
-                                                <td className="date-cell">{formatDateFr(inv.date)}</td>
-                                                <td className="day-cell"><strong>{inv.dayName}</strong></td>
-                                                <td>{inv.nbP}</td>
-                                                <td>{inv.nbOf}</td>
-                                                <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
-                                                <td className={parseFloat(inv.averageCost) > 3500 ? "avg-high" : ""}>
-                                                    {inv.averageCost} Ar
-                                                </td>
-                                                {/* <td className="comment-cell" title={inv.comment}>
-                                        {inv.comment ? (
-                                            <span className="has-comment-badge">Oui</span>
-                                        ) : (
-                                            <span className="no-comment-text">—</span>
-                                        )}
-                                    </td> */}
-                                                {/* <td className="actions-cell">
-                                            <button
-                                                className="action-btn view-btn"
-                                                onClick={() => handleOpenModal(inv, 'view')}
-                                                title="Consulter"
-                                            >
-                                                <Eye size={16} /> Voir
-                                            </button>
-                                            <button
-                                                className="action-btn edit-btn"
-                                                onClick={() => handleOpenModal(inv, 'edit')}
-                                                title="Modifier"
-                                            >
-                                                <Edit3 size={16} /> Modifier
-                                            </button>
-                                        </td> */}
-                                            </tr>
-                                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </main>
-            <Footer />
-            {/* View / Edit Modal */}
-            {activeModal && modalFormData && (
-                <div className="modal-backdrop" onClick={handleCloseModal}>
-                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>
-                                <FileText className="field-icon" />
-                                {activeModal.mode === "edit" ? "Modifier la Facture" : "Détails de la Facture"}
-                            </h3>
-                            <button className="close-btn" onClick={handleCloseModal}>
-                                <X size={20} />
-                            </button>
-                        </div>
+                                ? <span className="skeleton-line skeleton-count" aria-hidden="true" />
+                                : <span className="table-count"> · {invoices.length} {invoices.length > 1 ? "factures" : "facture"}</span>}
+                        </h2>
+                    </div>
 
-                        <form onSubmit={handleModalSubmit} className="modal-body" noValidate>
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label>Jour & Date :</label>
-                                    <input type="text" value={`${modalFormData.dayName} (${formatDateFr(modalFormData.date)})`} disabled />
-                                </div>
+                    <div className="table-responsive">
+                        <table className="monthly-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Jour</th>
+                                    <th className="num-col">Patients</th>
+                                    <th className="num-col">Ordonnances</th>
+                                    <th className="num-col">Montant total</th>
+                                    <th className="num-col">Coût moyen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading
+                                    ? [1, 2, 3, 4, 5].map((row) => (
+                                        <tr key={row} aria-hidden="true">
+                                            {[1, 2, 3, 4, 5, 6].map((cell) => (
+                                                <td key={cell}><span className="skeleton-line skeleton-cell" /></td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                    : error
+                                        ? <tr><td colSpan="6">Les factures n'ont pas pu être chargées.</td></tr>
+                                        : invoices.length === 0
+                                            ? <tr><td colSpan="6">Aucune facture enregistrée pour ce mois.</td></tr>
+                                            : invoices.map((inv) => {
+                                                const isHigh = parseFloat(inv.averageCost) > 3500;
+                                                return (
+                                                    <tr key={inv.id}>
+                                                        <td className="date-cell">{formatDateFr(inv.date)}</td>
+                                                        <td className="day-cell">{inv.dayName}</td>
+                                                        <td className="nb-cell">{inv.nbP}</td>
+                                                        <td className="nb-cell">{inv.nbOf}</td>
+                                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                                        <td className={`avg-cell ${isHigh ? "avg-high" : ""}`}>
+                                                            {Number(inv.averageCost).toLocaleString("fr-FR")} Ar
+                                                            {isHigh && <span className="avg-flag">(Élevé)</span>}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                            </tbody>
+                        </table>
+                    </div>
+                </main>
 
-                                <div className="form-group">
-                                    <label>Nombre de patients :</label>
-                                    <input
-                                        type="number"
-                                        value={modalFormData.nbP}
-                                        disabled={activeModal.mode === "view"}
-                                        onChange={(e) => {
-                                            setModalError(null);
-                                            setModalFormData({ ...modalFormData, nbP: e.target.value });
-                                        }}
-                                    />
-                                </div>
+                {activeModal && modalFormData && (
+                    <div className="modal-backdrop" onClick={handleCloseModal}>
+                        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>
+                                    <FileText className="field-icon" aria-hidden="true" />
+                                    {activeModal.mode === "edit" ? "Modifier la facture" : "Détails de la facture"}
+                                </h3>
+                                <button type="button" className="close-btn" onClick={handleCloseModal} aria-label="Fermer">
+                                    <X size={18} />
+                                </button>
+                            </div>
 
-                                <div className="form-group">
-                                    <label>Ordonnances :</label>
-                                    <input
-                                        type="number"
-                                        value={modalFormData.nbOf}
-                                        disabled={activeModal.mode === "view"}
-                                        onChange={(e) => {
-                                            setModalError(null);
-                                            setModalFormData({ ...modalFormData, nbOf: e.target.value });
-                                        }}
-                                    />
-                                </div>
+                            <form onSubmit={handleModalSubmit} className="modal-body" noValidate>
+                                <div className="form-grid">
+                                    <div className="form-group">
+                                        <label>Jour & Date</label>
+                                        <input type="text" value={`${modalFormData.dayName} (${formatDateFr(modalFormData.date)})`} disabled />
+                                    </div>
 
-                                <div className="form-group">
-                                    <label>Montant total (Ar) :</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={modalFormData.amount}
-                                        disabled={activeModal.mode === "view"}
-                                        onChange={(e) => {
-                                            setModalError(null);
-                                            setModalFormData({ ...modalFormData, amount: e.target.value });
-                                        }}
-                                    />
-                                </div>
-
-                                {modalError && <div className="alert error full-width" role="alert">{modalError}</div>}
-
-                                {parseFloat(modalFormData.amount / (modalFormData.nbP || 1)) > 3500 && (
-                                    <div className="form-group full-width">
-                                        <label>Commentaire (Coût moyen &gt; 3500) :</label>
-                                        <textarea
-                                            rows="3"
-                                            value={modalFormData.comment}
+                                    <div className="form-group">
+                                        <label>Nombre de patients</label>
+                                        <input
+                                            type="number"
+                                            value={modalFormData.nbP}
                                             disabled={activeModal.mode === "view"}
                                             onChange={(e) => {
                                                 setModalError(null);
-                                                setModalFormData({ ...modalFormData, comment: e.target.value });
+                                                setModalFormData({ ...modalFormData, nbP: e.target.value });
                                             }}
-                                        ></textarea>
+                                        />
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="modal-actions">
-                                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
-                                    Fermer
-                                </button>
-                                {activeModal.mode === "edit" && (
-                                    <button type="submit" className="submit-btn">
-                                        <Check size={18} /> Enregistrer
+                                    <div className="form-group">
+                                        <label>Ordonnances</label>
+                                        <input
+                                            type="number"
+                                            value={modalFormData.nbOf}
+                                            disabled={activeModal.mode === "view"}
+                                            onChange={(e) => {
+                                                setModalError(null);
+                                                setModalFormData({ ...modalFormData, nbOf: e.target.value });
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Montant total (Ar)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={modalFormData.amount}
+                                            disabled={activeModal.mode === "view"}
+                                            onChange={(e) => {
+                                                setModalError(null);
+                                                setModalFormData({ ...modalFormData, amount: e.target.value });
+                                            }}
+                                        />
+                                    </div>
+
+                                    {modalError && <div className="alert error full-width" role="alert">{modalError}</div>}
+
+                                    {parseFloat(modalFormData.amount / (modalFormData.nbP || 1)) > 3500 && (
+                                        <div className="form-group full-width">
+                                            <label>Commentaire (Coût moyen &gt; 3 500)</label>
+                                            <textarea
+                                                rows="3"
+                                                value={modalFormData.comment}
+                                                disabled={activeModal.mode === "view"}
+                                                onChange={(e) => {
+                                                    setModalError(null);
+                                                    setModalFormData({ ...modalFormData, comment: e.target.value });
+                                                }}
+                                            ></textarea>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button type="button" className="btn-secondary" onClick={handleCloseModal}>
+                                        Fermer
                                     </button>
-                                )}
-                            </div>
-                        </form>
+                                    {activeModal.mode === "edit" && (
+                                        <button type="submit" className="submit-btn">
+                                            <Check size={16} aria-hidden="true" /> Enregistrer
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+            <Footer />
+        </>
     );
 };
 
