@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     ArrowLeft,
@@ -6,7 +6,10 @@ import {
     BarChart3,
     CalendarDays,
     FilePlus,
+    Minus,
     Receipt,
+    TrendingDown,
+    TrendingUp,
     Users,
     Wallet
 } from "lucide-react";
@@ -22,22 +25,161 @@ const formatDateInputValue = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+const toDateKey = (value) => String(value || "").slice(0, 10);
+
+const parseDateKey = (dateKey) => {
+    const [year, month, day] = String(dateKey).split("-").map(Number);
+    return new Date(year, month - 1, day);
+};
+
+const formatShortDate = (dateValue) => {
+    if (!dateValue) return "—";
+    const key = toDateKey(dateValue);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return String(dateValue);
+    return parseDateKey(key).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+    });
+};
+
+const formatShortDayMonth = (dateValue) => {
+    const key = toDateKey(dateValue);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return String(dateValue);
+    return parseDateKey(key).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "short"
+    });
+};
+
+const summarizeInvoices = (list) => {
+    const count = list.length;
+    const patients = list.reduce((total, inv) => total + (Number(inv.nbP) || 0), 0);
+    const prescriptions = list.reduce((total, inv) => total + (Number(inv.nbOf) || 0), 0);
+    const amount = list.reduce((total, inv) => total + (Number(inv.amount) || 0), 0);
+    const averageCost = patients > 0 ? Math.round(amount / patients) : 0;
+
+    return { count, patients, prescriptions, amount, averageCost };
+};
+
+const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
+
+const getComparisonDelta = (current, previous, unit = "") => {
+    const diff = current - previous;
+    const suffix = unit ? ` ${unit}` : "";
+
+    if (previous === 0 && current === 0) {
+        return {
+            direction: "flat",
+            label: "0 %",
+            previousText: `vs 0${suffix}`
+        };
+    }
+
+    if (previous === 0) {
+        return {
+            direction: diff > 0 ? "up" : "down",
+            label: `${diff > 0 ? "+" : ""}${formatNumber(diff)}${suffix}`,
+            previousText: `vs 0${suffix}`
+        };
+    }
+
+    const pct = (diff / previous) * 100;
+    const rounded = Math.round(pct * 10) / 10;
+    const formattedPct = new Intl.NumberFormat("fr-FR", {
+        minimumFractionDigits: Number.isInteger(rounded) ? 0 : 1,
+        maximumFractionDigits: 1
+    }).format(Math.abs(rounded));
+
+    if (rounded === 0) {
+        return {
+            direction: "flat",
+            label: "0 %",
+            previousText: `vs ${formatNumber(previous)}${suffix}`
+        };
+    }
+
+    return {
+        direction: rounded > 0 ? "up" : "down",
+        label: `${rounded > 0 ? "+" : "-"}${formattedPct} %`,
+        previousText: `vs ${formatNumber(previous)}${suffix}`
+    };
+};
+
+const getInvoiceSortTime = (invoice) => {
+    const timestamp = invoice?.updatedAt || invoice?.createdAt;
+    if (timestamp) {
+        const parsed = new Date(timestamp).getTime();
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    const key = toDateKey(invoice?.date);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+        return parseDateKey(key).getTime();
+    }
+    return 0;
+};
+
 const Dashboard = () => {
     const { token, user } = useAuth();
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
+    const periods = useMemo(() => {
         const now = new Date();
-        const startDate = formatDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
-        const endDate = formatDateInputValue(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const today = new Date(year, month, now.getDate());
+
+        const curMonthStart = new Date(year, month, 1);
+        const curMonthEnd = new Date(year, month + 1, 0);
+        const prevMonthStart = new Date(year, month - 1, 1);
+        const prevMonthEnd = new Date(year, month, 0);
+
+        const dayOfWeek = today.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const curWeekStart = new Date(today);
+        curWeekStart.setDate(today.getDate() + diffToMonday);
+        const curWeekEnd = new Date(curWeekStart);
+        curWeekEnd.setDate(curWeekStart.getDate() + 6);
+
+        const prevWeekStart = new Date(curWeekStart);
+        prevWeekStart.setDate(curWeekStart.getDate() - 7);
+        const prevWeekEnd = new Date(curWeekStart);
+        prevWeekEnd.setDate(curWeekStart.getDate() - 1);
+
+        // Fetch 4 months back so "last saved invoice" still resolves if current/prev month are empty
+        const historyLookback = new Date(year, month - 3, 1);
+        const earliestFetch = new Date(
+            Math.min(prevMonthStart.getTime(), prevWeekStart.getTime(), historyLookback.getTime())
+        );
+        const latestFetch = new Date(
+            Math.max(curMonthEnd.getTime(), curWeekEnd.getTime())
+        );
+
+        return {
+            fetchStart: formatDateInputValue(earliestFetch),
+            fetchEnd: formatDateInputValue(latestFetch),
+            curMonthStart: formatDateInputValue(curMonthStart),
+            curMonthEnd: formatDateInputValue(curMonthEnd),
+            prevMonthStart: formatDateInputValue(prevMonthStart),
+            prevMonthEnd: formatDateInputValue(prevMonthEnd),
+            curWeekStart: formatDateInputValue(curWeekStart),
+            curWeekEnd: formatDateInputValue(curWeekEnd),
+            prevWeekStart: formatDateInputValue(prevWeekStart),
+            prevWeekEnd: formatDateInputValue(prevWeekEnd),
+            curMonthLabel: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(curMonthStart),
+            prevMonthLabel: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(prevMonthStart)
+        };
+    }, []);
+
+    useEffect(() => {
         const controller = new AbortController();
 
         const loadInvoices = async () => {
             try {
                 const response = await fetch(
-                    `https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
+                    `https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${periods.fetchStart}&endDate=${periods.fetchEnd}`,
                     {
                         headers: getAuthHeaders(token),
                         signal: controller.signal
@@ -67,20 +209,102 @@ const Dashboard = () => {
 
         loadInvoices();
         return () => controller.abort();
-    }, [token]);
+    }, [token, periods.fetchStart, periods.fetchEnd]);
 
-    const totalPatients = invoices.reduce((total, invoice) => total + (Number(invoice.nbP) || 0), 0);
-    const totalPrescriptions = invoices.reduce((total, invoice) => total + (Number(invoice.nbOf) || 0), 0);
-    const totalAmount = invoices.reduce((total, invoice) => total + (Number(invoice.amount) || 0), 0);
-    const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
-    const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date());
+    const {
+        curMonthStats,
+        prevMonthStats,
+        curWeekStats,
+        prevWeekStats,
+        lastSavedInvoice
+    } = useMemo(() => {
+        const inRange = (inv, start, end) => {
+            const key = toDateKey(inv.date);
+            return key >= start && key <= end;
+        };
+
+        const curMonthList = invoices.filter((inv) => inRange(inv, periods.curMonthStart, periods.curMonthEnd));
+        const prevMonthList = invoices.filter((inv) => inRange(inv, periods.prevMonthStart, periods.prevMonthEnd));
+        const curWeekList = invoices.filter((inv) => inRange(inv, periods.curWeekStart, periods.curWeekEnd));
+        const prevWeekList = invoices.filter((inv) => inRange(inv, periods.prevWeekStart, periods.prevWeekEnd));
+
+        const sorted = [...invoices].sort((a, b) => {
+            const timeDiff = getInvoiceSortTime(b) - getInvoiceSortTime(a);
+            if (timeDiff !== 0) return timeDiff;
+            return toDateKey(b.date).localeCompare(toDateKey(a.date));
+        });
+
+        return {
+            curMonthStats: summarizeInvoices(curMonthList),
+            prevMonthStats: summarizeInvoices(prevMonthList),
+            curWeekStats: summarizeInvoices(curWeekList),
+            prevWeekStats: summarizeInvoices(prevWeekList),
+            lastSavedInvoice: sorted[0] || null
+        };
+    }, [invoices, periods]);
 
     const metrics = [
-        { label: "Factures enregistrées", value: formatNumber(invoices.length), icon: Receipt },
-        { label: "Patients", value: formatNumber(totalPatients), icon: Users },
-        { label: "Ordonnances", value: formatNumber(totalPrescriptions), icon: FilePlus },
-        { label: "Montant total", value: `${formatNumber(totalAmount)} Ar`, icon: Wallet }
+        { label: "Factures enregistrées", value: formatNumber(curMonthStats.count), icon: Receipt },
+        { label: "Patients", value: formatNumber(curMonthStats.patients), icon: Users },
+        { label: "Ordonnances", value: formatNumber(curMonthStats.prescriptions), icon: FilePlus },
+        { label: "Montant total", value: `${formatNumber(curMonthStats.amount)} Ar`, icon: Wallet }
     ];
+
+    const buildComparisonRows = (current, previous) => [
+        {
+            label: "Montant total",
+            valueText: `${formatNumber(current.amount)} Ar`,
+            delta: getComparisonDelta(current.amount, previous.amount, "Ar")
+        },
+        {
+            label: "Patients",
+            valueText: formatNumber(current.patients),
+            delta: getComparisonDelta(current.patients, previous.patients)
+        },
+        {
+            label: "Ordonnances",
+            valueText: formatNumber(current.prescriptions),
+            delta: getComparisonDelta(current.prescriptions, previous.prescriptions)
+        },
+        {
+            label: "Coût moyen",
+            valueText: `${formatNumber(current.averageCost)} Ar`,
+            delta: getComparisonDelta(current.averageCost, previous.averageCost, "Ar")
+        },
+        {
+            label: "Factures saisies",
+            valueText: formatNumber(current.count),
+            delta: getComparisonDelta(current.count, previous.count)
+        }
+    ];
+
+    const weeklyComparisonRows = buildComparisonRows(curWeekStats, prevWeekStats);
+    const monthlyComparisonRows = buildComparisonRows(curMonthStats, prevMonthStats);
+
+    const lastInvoicePatients = Number(lastSavedInvoice?.nbP) || 0;
+    const lastInvoicePrescriptions = Number(lastSavedInvoice?.nbOf) || 0;
+    const lastInvoiceAmount = Number(lastSavedInvoice?.amount) || 0;
+    const lastInvoiceAvg = Number(
+        lastSavedInvoice?.averageCost ??
+        (lastInvoicePatients > 0 ? Math.round(lastInvoiceAmount / lastInvoicePatients) : 0)
+    );
+    const isLastInvoiceHighAvg = lastInvoiceAvg > 3500;
+
+    const renderDeltaBadge = (delta) => {
+        const Icon =
+            delta.direction === "up"
+                ? TrendingUp
+                : delta.direction === "down"
+                    ? TrendingDown
+                    : Minus;
+
+        return (
+            <span className={`comparison-delta delta-${delta.direction} tabular-nums`}>
+                <Icon aria-hidden="true" />
+                <span>{delta.label}</span>
+            </span>
+        );
+    };
 
     return (
         <>
@@ -91,7 +315,7 @@ const Dashboard = () => {
                     </Link>
                     <div className="header-title-wrapper">
                         <p className="report-kicker">
-                            Tableau de bord <span aria-hidden="true">·</span> <span className="month-capitalize">{monthName}</span>
+                            Tableau de bord <span aria-hidden="true">·</span> <span className="month-capitalize">{periods.curMonthLabel}</span>
                         </p>
                         <h1 className="report-title">
                             Bonjour{user?.name ? `, ${user.name}` : ""}
@@ -118,6 +342,148 @@ const Dashboard = () => {
                     </section>
 
                     {error && <div className="alert error" role="alert">{error}</div>}
+
+                    <section className="dashboard-panel" aria-labelledby="last-invoice-title">
+                        <div className="dashboard-panel-header">
+                            <div className="dashboard-panel-title-group">
+                                <h2 id="last-invoice-title">Dernière facture enregistrée</h2>
+                                {!loading && lastSavedInvoice && (
+                                    <p className="dashboard-panel-meta">
+                                        Date de facture : {formatShortDate(lastSavedInvoice.date)}
+                                        {lastSavedInvoice.createdAt && (
+                                            <>
+                                                <span aria-hidden="true"> · </span>
+                                                Saisie le {new Date(lastSavedInvoice.createdAt).toLocaleDateString("fr-FR", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric"
+                                                })}
+                                            </>
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+                            <Link to="/invoices/new" className="dashboard-panel-link">
+                                Nouvelle facture <ArrowRight aria-hidden="true" />
+                            </Link>
+                        </div>
+
+                        {loading ? (
+                            <p className="dashboard-panel-state" role="status">Chargement de la dernière facture...</p>
+                        ) : !lastSavedInvoice ? (
+                            <div className="dashboard-panel-empty">
+                                <p>Aucune facture enregistrée sur les quatre derniers mois.</p>
+                                <Link to="/invoices/new" className="dashboard-inline-cta">
+                                    Enregistrer une facture <ArrowRight aria-hidden="true" />
+                                </Link>
+                            </div>
+                        ) : (
+                            <>
+                                <dl className="last-invoice-grid">
+                                    <div className="last-invoice-cell">
+                                        <dt>Date</dt>
+                                        <dd className="tabular-nums">{formatShortDate(lastSavedInvoice.date)}</dd>
+                                    </div>
+                                    <div className="last-invoice-cell">
+                                        <dt>Patients</dt>
+                                        <dd className="tabular-nums">{formatNumber(lastInvoicePatients)}</dd>
+                                    </div>
+                                    <div className="last-invoice-cell">
+                                        <dt>Ordonnances</dt>
+                                        <dd className="tabular-nums">{formatNumber(lastInvoicePrescriptions)}</dd>
+                                    </div>
+                                    <div className="last-invoice-cell">
+                                        <dt>Montant</dt>
+                                        <dd className="tabular-nums">{formatNumber(lastInvoiceAmount)} Ar</dd>
+                                    </div>
+                                    <div className="last-invoice-cell">
+                                        <dt>Coût moyen</dt>
+                                        <dd className={`tabular-nums ${isLastInvoiceHighAvg ? "is-high" : ""}`}>
+                                            {formatNumber(Math.round(lastInvoiceAvg))} Ar
+                                            {isLastInvoiceHighAvg && <span className="high-flag"> (Élevé)</span>}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                {lastSavedInvoice.comment && (
+                                    <p className="last-invoice-comment">
+                                        <span>Remarque :</span> {lastSavedInvoice.comment}
+                                    </p>
+                                )}
+                            </>
+                        )}
+                    </section>
+
+                    <section className="dashboard-comparisons" aria-label="Comparaison hebdomadaire et mensuelle">
+                        <article className="dashboard-panel" aria-labelledby="weekly-comparison-title">
+                            <div className="dashboard-panel-header">
+                                <div className="dashboard-panel-title-group">
+                                    <h2 id="weekly-comparison-title">Statistiques hebdomadaires</h2>
+                                    <p className="dashboard-panel-meta">
+                                        {formatShortDayMonth(periods.curWeekStart)} – {formatShortDayMonth(periods.curWeekEnd)}
+                                        <span aria-hidden="true"> · </span>
+                                        vs {formatShortDayMonth(periods.prevWeekStart)} – {formatShortDayMonth(periods.prevWeekEnd)}
+                                    </p>
+                                </div>
+                                <Link to="/reports/week" className="dashboard-panel-link">
+                                    Voir semaine <ArrowRight aria-hidden="true" />
+                                </Link>
+                            </div>
+
+                            {loading ? (
+                                <p className="dashboard-panel-state" role="status">Calcul des statistiques hebdomadaires...</p>
+                            ) : (
+                                <div className="comparison-list">
+                                    {weeklyComparisonRows.map((row) => (
+                                        <div className="comparison-row" key={row.label}>
+                                            <span className="comparison-label">{row.label}</span>
+                                            <div className="comparison-values">
+                                                <strong className="comparison-current tabular-nums">{row.valueText}</strong>
+                                                <div className="comparison-sub">
+                                                    <span className="comparison-prev tabular-nums">{row.delta.previousText}</span>
+                                                    {renderDeltaBadge(row.delta)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </article>
+
+                        <article className="dashboard-panel" aria-labelledby="monthly-comparison-title">
+                            <div className="dashboard-panel-header">
+                                <div className="dashboard-panel-title-group">
+                                    <h2 id="monthly-comparison-title">Statistiques mensuelles</h2>
+                                    <p className="dashboard-panel-meta">
+                                        <span className="month-capitalize">{periods.curMonthLabel}</span>
+                                        <span aria-hidden="true"> · </span>
+                                        vs <span className="month-capitalize">{periods.prevMonthLabel}</span>
+                                    </p>
+                                </div>
+                                <Link to="/reports/month" className="dashboard-panel-link">
+                                    Voir mois <ArrowRight aria-hidden="true" />
+                                </Link>
+                            </div>
+
+                            {loading ? (
+                                <p className="dashboard-panel-state" role="status">Calcul des statistiques mensuelles...</p>
+                            ) : (
+                                <div className="comparison-list">
+                                    {monthlyComparisonRows.map((row) => (
+                                        <div className="comparison-row" key={row.label}>
+                                            <span className="comparison-label">{row.label}</span>
+                                            <div className="comparison-values">
+                                                <strong className="comparison-current tabular-nums">{row.valueText}</strong>
+                                                <div className="comparison-sub">
+                                                    <span className="comparison-prev tabular-nums">{row.delta.previousText}</span>
+                                                    {renderDeltaBadge(row.delta)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </article>
+                    </section>
 
                     <section className="dashboard-shortcuts" aria-labelledby="dashboard-shortcuts-title">
                         <div className="dashboard-section-heading">

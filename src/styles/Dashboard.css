@@ -5,7 +5,7 @@
 .dashboard-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .dashboard-metrics {
@@ -67,6 +67,287 @@
   color: var(--text-subtle);
   font-size: 0.85rem;
 }
+
+/* Single-elevation structured panels */
+
+.dashboard-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  min-width: 0;
+  padding: 1.35rem 1.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+}
+
+.dashboard-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dashboard-panel-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.dashboard-panel-title-group h2 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.dashboard-panel-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.dashboard-panel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard-panel-link svg {
+  width: 15px;
+  height: 15px;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard-panel-link:hover {
+  color: var(--accent-hover);
+}
+
+.dashboard-panel-link:hover svg {
+  transform: translateX(2px);
+}
+
+.dashboard-panel-link:focus-visible,
+.dashboard-inline-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dashboard-panel-state {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: var(--text-subtle);
+  font-size: 0.875rem;
+}
+
+.dashboard-panel-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.35rem 0;
+}
+
+.dashboard-panel-empty p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.dashboard-inline-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard-inline-cta:hover {
+  background: var(--primary-hover);
+}
+
+.dashboard-inline-cta svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Last saved invoice strip (hairline separated, no nested cards) */
+
+.last-invoice-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.last-invoice-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  padding-right: 0.85rem;
+  border-right: 1px solid var(--border-color);
+}
+
+.last-invoice-cell:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+
+.last-invoice-cell dt {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.last-invoice-cell dd {
+  margin: 0;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.last-invoice-cell dd.is-high {
+  color: var(--error-text);
+}
+
+.high-flag {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.last-invoice-comment {
+  margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.last-invoice-comment span {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Weekly & Monthly Comparison Panels */
+
+.dashboard-comparisons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.comparison-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.72rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-row:first-child {
+  padding-top: 0.15rem;
+}
+
+.comparison-row:last-child {
+  padding-bottom: 0.1rem;
+  border-bottom: none;
+}
+
+.comparison-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.comparison-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  min-width: 0;
+  text-align: right;
+}
+
+.comparison-current {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.comparison-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.comparison-prev {
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.comparison-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.comparison-delta svg {
+  width: 13px;
+  height: 13px;
+}
+
+.comparison-delta.delta-up {
+  color: var(--success-text);
+}
+
+.comparison-delta.delta-down {
+  color: var(--error-text);
+}
+
+.comparison-delta.delta-flat {
+  color: var(--text-subtle);
+}
+
+/* Shortcuts */
 
 .dashboard-shortcuts {
   display: flex;
@@ -170,6 +451,26 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .last-invoice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .last-invoice-cell {
+    padding-right: 0;
+    border-right: none;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .last-invoice-cell:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .dashboard-comparisons {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-shortcut-grid {
     grid-template-columns: 1fr;
   }
@@ -178,5 +479,18 @@
 @media (max-width: 480px) {
   .dashboard-metric {
     padding: 1rem;
+  }
+
+  .dashboard-panel {
+    padding: 1.1rem;
+  }
+
+  .dashboard-panel-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .last-invoice-grid {
+    grid-template-columns: 1fr;
   }
 }
