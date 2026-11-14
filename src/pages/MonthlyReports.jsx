@@ -335,7 +335,7 @@ const MonthlyReports = () => {
                 </section>
 
                 <main className="table-card">
-                    <div className="table-header">
+                    <div className="table-header flex-header">
                         <h2>
                             Historique de <span className="month-capitalize">{getFormattedMonthTitle()}</span>
                             {loading

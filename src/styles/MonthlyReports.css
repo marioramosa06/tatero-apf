@@ -120,6 +120,14 @@
   font-weight: 600;
 }
 
+.table-header.flex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .action-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
