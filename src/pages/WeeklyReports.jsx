@@ -4,6 +4,8 @@ import { exportWeeklyReportXLSX } from "../utils/exportReport";
 import { Link } from "react-router-dom";
 import {
     CalendarDays,
+    ChevronLeft,
+    ChevronRight,
     ArrowRight,
     ArrowLeft,
     X,
@@ -22,9 +24,13 @@ const toDateInputValue = (date) => {
     return `${year}-${month}-${day}`;
 };
 
+const parseDateInput = (value) => {
+    const [year, month, day] = String(value).split("-").map(Number);
+    return new Date(year, month - 1, day);
+};
+
 const getWorkWeekRange = (value) => {
-    const [year, month, day] = value.split("-").map(Number);
-    const monday = new Date(year, month - 1, day);
+    const monday = parseDateInput(value);
     const dayOfWeek = monday.getDay();
     monday.setDate(monday.getDate() + (dayOfWeek === 0 ? -6 : 1 - dayOfWeek));
 
@@ -37,6 +43,12 @@ const getWorkWeekRange = (value) => {
     };
 };
 
+const shiftWorkWeek = (startDate, deltaWeeks) => {
+    const monday = parseDateInput(startDate);
+    monday.setDate(monday.getDate() + deltaWeeks * 7);
+    return getWorkWeekRange(toDateInputValue(monday));
+};
+
 const WeeklyReports = () => {
     const { token, user } = useAuth();
     const [dateRange, setDateRange] = useState(() => getWorkWeekRange(toDateInputValue(new Date())));
@@ -44,8 +56,7 @@ const WeeklyReports = () => {
 
     const formatDate = (value) => {
         if (!value) return "";
-        const [year, month, day] = value.split("-").map(Number);
-        return new Date(year, month - 1, day).toLocaleDateString("fr-FR", {
+        return parseDateInput(value).toLocaleDateString("fr-FR", {
             day: "numeric",
             month: "short",
             year: "numeric"
@@ -80,13 +91,41 @@ const WeeklyReports = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const handleDateChange = (e) => {
-        if (!e.target.value) return;
-
-        setDateRange(getWorkWeekRange(e.target.value));
+    const applyDateRange = (nextRange) => {
+        if (nextRange.startDate === startDate && nextRange.endDate === endDate) {
+            return;
+        }
         setLoading(true);
         setError(null);
-        setInvoices(null);
+        setDateRange(nextRange);
+    };
+
+    const handleStartDateChange = (e) => {
+        const value = e.target.value;
+        if (!value) return;
+
+        applyDateRange({
+            startDate: value,
+            endDate: value > endDate ? value : endDate
+        });
+    };
+
+    const handleEndDateChange = (e) => {
+        const value = e.target.value;
+        if (!value) return;
+
+        applyDateRange({
+            startDate: value < startDate ? value : startDate,
+            endDate: value
+        });
+    };
+
+    const handleShiftWeek = (deltaWeeks) => {
+        applyDateRange(shiftWorkWeek(startDate, deltaWeeks));
+    };
+
+    const handleCurrentWeek = () => {
+        applyDateRange(getWorkWeekRange(toDateInputValue(new Date())));
     };
 
     const handleOpenModal = (invoice, mode) => {
@@ -201,11 +240,14 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
+        const controller = new AbortController();
+
         fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
             {
                 headers: {
                     ...getAuthHeaders(token)
-                }
+                },
+                signal: controller.signal
             }
         )
             .then(async (res) => {
@@ -216,22 +258,33 @@ const WeeklyReports = () => {
                 return data;
             })
             .then((dat) => {
-                setTotalAmount(0);
-                setTotalPatient(0);
-                setTotalOf(0);
+                const list = Array.isArray(dat) ? dat : [];
+                let sumAmount = 0;
+                let sumPatients = 0;
+                let sumOf = 0;
 
-                setInvoices(dat);
-                dat.forEach(element => {
-                    setTotalAmount(prev => prev + Number(element.amount || 0));
-                    setTotalPatient(prev => prev + Number(element.nbP || 0));
-                    setTotalOf(prev => prev + Number(element.nbOf || 0));
+                list.forEach((element) => {
+                    sumAmount += Number(element.amount || 0);
+                    sumPatients += Number(element.nbP || 0);
+                    sumOf += Number(element.nbOf || 0);
                 });
-            }).catch(err => {
-                setError(err.message);
-                setLoading(false);
+
+                setTotalAmount(sumAmount);
+                setTotalPatient(sumPatients);
+                setTotalOf(sumOf);
+                setInvoices(list);
+                setError(null);
+            }).catch((err) => {
+                if (err.name === "AbortError") return;
+                setError(err.message || "Impossible de charger les factures.");
+                setInvoices([]);
             }).finally(() => {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             });
+
+        return () => controller.abort();
     }, [startDate, endDate, token]);
 
     return (
@@ -245,21 +298,52 @@ const WeeklyReports = () => {
                         <p className="report-kicker">Rapport hebdomadaire</p>
                         <h1 className="report-title">Facture de la semaine</h1>
                         <p className="report-subtitle">
-                            Sélectionnez une date : la période est automatiquement réglée du lundi au vendredi.
+                            Par défaut du lundi au vendredi, ou ajustez librement les dates de début et de fin.
                         </p>
                     </div>
                 </header>
 
-                <section className="week-picker-card">
-                    <div className="week-picker-heading">
-                        <span className="week-picker-icon">
-                            <CalendarDays aria-hidden="true" />
-                        </span>
-                        <div>
-                            <span className="week-picker-eyebrow">Période du rapport</span>
-                            <h2>Choisir une période</h2>
+                <section className="week-picker-card" aria-label="Sélection de l'intervalle de dates">
+                    <div className="week-picker-top">
+                        <div className="week-picker-heading">
+                            <span className="week-picker-icon">
+                                <CalendarDays aria-hidden="true" />
+                            </span>
+                            <div>
+                                <span className="week-picker-eyebrow">Période sélectionnée</span>
+                                <h2 className="tabular-nums">{`${formatDate(startDate)} — ${formatDate(endDate)}`}</h2>
+                            </div>
+                        </div>
+
+                        <div className="week-stepper" role="group" aria-label="Navigation par semaine">
+                            <button
+                                type="button"
+                                className="week-step-btn"
+                                onClick={() => handleShiftWeek(-1)}
+                                title="Semaine précédente"
+                                aria-label="Semaine précédente"
+                            >
+                                <ChevronLeft size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                className="week-step-btn week-step-current"
+                                onClick={handleCurrentWeek}
+                            >
+                                Cette semaine
+                            </button>
+                            <button
+                                type="button"
+                                className="week-step-btn"
+                                onClick={() => handleShiftWeek(1)}
+                                title="Semaine suivante"
+                                aria-label="Semaine suivante"
+                            >
+                                <ChevronRight size={16} aria-hidden="true" />
+                            </button>
                         </div>
                     </div>
+
                     <div className="week-picker-controls">
                         <div className="week-date-field">
                             <label htmlFor="startDate">Date de début</label>
@@ -267,7 +351,7 @@ const WeeklyReports = () => {
                                 type="date"
                                 id="startDate"
                                 value={startDate}
-                                onChange={handleDateChange}
+                                onChange={handleStartDateChange}
                             />
                         </div>
                         <ArrowRight className="week-date-separator" aria-hidden="true" />
@@ -276,14 +360,11 @@ const WeeklyReports = () => {
                             <input
                                 type="date"
                                 id="endDate"
+                                min={startDate}
                                 value={endDate}
-                                onChange={handleDateChange}
+                                onChange={handleEndDateChange}
                             />
                         </div>
-                    </div>
-                    <div className="week-range-badge">
-                        <span>Période sélectionnée</span>
-                        <strong>{`${formatDate(startDate)} au ${formatDate(endDate)}`}</strong>
                     </div>
                 </section>
 

@@ -2,15 +2,22 @@
 
 .week-picker-card {
   width: 100%;
-  display: grid;
-  grid-template-columns: minmax(180px, 0.85fr) minmax(0, 2fr) minmax(200px, 1fr);
-  align-items: center;
-  gap: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
   padding: 1.25rem 1.5rem;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+}
+
+.week-picker-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .week-picker-heading {
@@ -53,11 +60,59 @@
   line-height: 1.3;
 }
 
+.week-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  overflow: hidden;
+}
+
+.week-step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0 0.5rem;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.week-step-btn + .week-step-btn {
+  border-left: 1px solid var(--border-color);
+}
+
+.week-step-current {
+  padding-inline: 0.85rem;
+  color: var(--text-main);
+}
+
+.week-step-btn:hover {
+  background: var(--bg-muted);
+  color: var(--text-main);
+}
+
+.week-step-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .week-picker-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(160px, 1fr) auto minmax(160px, 1fr);
   align-items: end;
-  gap: 0.65rem;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
   min-width: 0;
 }
 
@@ -107,32 +162,6 @@
   height: 16px;
   margin-bottom: 0.75rem;
   color: var(--text-subtle);
-}
-
-.week-range-badge {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-muted);
-}
-
-.week-range-badge span {
-  color: var(--text-subtle);
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.week-range-badge strong {
-  color: var(--text-main);
-  overflow-wrap: anywhere;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .summary-grid {
@@ -493,35 +522,18 @@
   }
 }
 
-@media (max-width: 900px) {
-  .week-picker-card {
-    grid-template-columns: minmax(0, 1fr) minmax(200px, 0.9fr);
-  }
-
-  .week-picker-heading {
-    grid-column: 1 / -1;
-  }
-
-  .week-picker-controls {
-    grid-column: 1;
-  }
-
-  .week-range-badge {
-    grid-column: 2;
-  }
-}
-
 @media (max-width: 600px) {
   .week-picker-card {
-    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
     padding: 1.1rem;
   }
 
-  .week-picker-heading,
-  .week-picker-controls,
-  .week-range-badge {
-    grid-column: 1;
+  .week-picker-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .week-date-separator {
+    display: none;
   }
 
   .summary-grid {
@@ -530,15 +542,5 @@
 
   .table-header {
     padding: 1rem;
-  }
-}
-
-@media (max-width: 380px) {
-  .week-picker-controls {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .week-date-separator {
-    display: none;
   }
 }

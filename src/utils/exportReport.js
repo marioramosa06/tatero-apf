@@ -168,13 +168,27 @@ function formatShortDate(value) {
   });
 }
 
-function buildWeeklyDates(startDate) {
+function buildWeeklyDates(startDate, endDate) {
   const start = new Date(`${startDate}T00:00:00`);
   if (Number.isNaN(start.getTime())) {
     return [];
   }
 
-  return Array.from({ length: 5 }, (_, index) => {
+  const end = endDate ? new Date(`${endDate}T00:00:00`) : null;
+  if (!end || Number.isNaN(end.getTime()) || end < start) {
+    return Array.from({ length: 5 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      return date;
+    });
+  }
+
+  const diffDays = Math.min(
+    31,
+    Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+  );
+
+  return Array.from({ length: diffDays }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     return date;
@@ -188,7 +202,7 @@ export function exportWeeklyReportXLSX({
   user = {},
   exportData = {},
 }) {
-  const weeklyDates = buildWeeklyDates(startDate);
+  const weeklyDates = buildWeeklyDates(startDate, endDate);
   const invoiceMap = new Map(
     invoices.map((invoice) => [toDateOnly(invoice.date), invoice]),
   );
