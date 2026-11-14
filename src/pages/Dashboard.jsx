@@ -56,13 +56,13 @@ const summarizeInvoices = (list) => {
     const count = list.length;
     const patients = list.reduce((total, inv) => total + (Number(inv.nbP) || 0), 0);
     const prescriptions = list.reduce((total, inv) => total + (Number(inv.nbOf) || 0), 0);
-    const amount = list.reduce((total, inv) => total + (Number(inv.amount) || 0), 0);
+    const amount = Math.round(list.reduce((total, inv) => total + (Number(inv.amount) || 0), 0));
     const averageCost = patients > 0 ? Math.round(amount / patients) : 0;
 
     return { count, patients, prescriptions, amount, averageCost };
 };
 
-const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
+const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(Math.round(Number(value) || 0));
 
 const getComparisonDelta = (current, previous, unit = "") => {
     const diff = current - previous;
@@ -283,10 +283,12 @@ const Dashboard = () => {
 
     const lastInvoicePatients = Number(lastSavedInvoice?.nbP) || 0;
     const lastInvoicePrescriptions = Number(lastSavedInvoice?.nbOf) || 0;
-    const lastInvoiceAmount = Number(lastSavedInvoice?.amount) || 0;
-    const lastInvoiceAvg = Number(
-        lastSavedInvoice?.averageCost ??
-        (lastInvoicePatients > 0 ? Math.round(lastInvoiceAmount / lastInvoicePatients) : 0)
+    const lastInvoiceAmount = Math.round(Number(lastSavedInvoice?.amount) || 0);
+    const lastInvoiceAvg = Math.round(
+        Number(
+            lastSavedInvoice?.averageCost ??
+            (lastInvoicePatients > 0 ? lastInvoiceAmount / lastInvoicePatients : 0)
+        ) || 0
     );
     const isLastInvoiceHighAvg = lastInvoiceAvg > 3500;
 

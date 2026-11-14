@@ -236,7 +236,7 @@ const WeeklyReports = () => {
         }
 
         const updatedAvg = Number(modalFormData.nbP) > 0
-            ? Number((Number(modalFormData.amount) / Number(modalFormData.nbP)).toFixed(0))
+            ? Math.round(Number(modalFormData.amount) / Number(modalFormData.nbP))
             : 0;
         const submissionData = {
             nbP: Number(modalFormData.nbP),
@@ -468,7 +468,7 @@ const WeeklyReports = () => {
                             <div className="summary-card">
                                 <div className="summary-content">
                                     <span className="summary-label">Montant total</span>
-                                    <h3 className="summary-value">{totalAmount.toLocaleString("fr-FR")} Ar</h3>
+                                    <h3 className="summary-value">{Math.round(totalAmount).toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
 
@@ -489,7 +489,7 @@ const WeeklyReports = () => {
                             <div className="summary-card">
                                 <div className="summary-content">
                                     <span className="summary-label">Coût moyen / patient</span>
-                                    <h3 className="summary-value">{weeklyAvgCost.toLocaleString("fr-FR")} Ar</h3>
+                                    <h3 className="summary-value">{Math.round(weeklyAvgCost).toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
                         </section>
@@ -537,9 +537,9 @@ const WeeklyReports = () => {
                                                         <td className="date-cell">{inv.date.split("T")[0]}</td>
                                                         <td className="nb-cell">{inv.nbP}</td>
                                                         <td className="nb-cell">{inv.nbOf}</td>
-                                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                                        <td className="amount-cell">{Math.round(Number(inv.amount) || 0).toLocaleString("fr-FR")} Ar</td>
                                                         <td className={`avg-cell ${isHigh ? "avg-high" : ""}`}>
-                                                            {Number(inv.averageCost).toLocaleString("fr-FR")} Ar
+                                                            {Math.round(Number(inv.averageCost) || 0).toLocaleString("fr-FR")} Ar
                                                             {isHigh && <span className="avg-flag">(Élevé)</span>}
                                                         </td>
                                                     </tr>

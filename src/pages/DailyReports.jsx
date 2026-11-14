@@ -114,7 +114,7 @@ const DailyReports = () => {
         if (patients > 0 && totalAmount >= 0) {
             return Math.round(totalAmount / patients);
         }
-        return "0.00";
+        return 0;
     };
 
     const averageCostValue = parseFloat(calculateAverageCost());
@@ -187,7 +187,7 @@ const DailyReports = () => {
                     amount: "",
                     comment: ""
                 })
-                setSuccess(`Enregistrement d'une facture de ${data.amount} Ar pour la date du ${data.date.split("T")[0]} réussi.`)
+                setSuccess(`Enregistrement d'une facture de ${Math.round(Number(data.amount) || 0).toLocaleString("fr-FR")} Ar pour la date du ${data.date.split("T")[0]} réussi.`)
                 setIsPending(false)
             }).catch((err) => {
                 setError(err.message)

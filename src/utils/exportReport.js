@@ -203,13 +203,14 @@ export function exportWeeklyReportXLSX({
     invoices.map((invoice) => [toDateOnly(invoice.date), invoice]),
   );
 
-  const getNumericCellValue = (invoice, field) => {
+  const getNumericCellValue = (invoice, field, roundValue = false) => {
     if (!invoice || invoice[field] === undefined || invoice[field] === null) {
       return "";
     }
 
     const value = Number(invoice[field]);
-    return Number.isFinite(value) ? value : "";
+    if (!Number.isFinite(value)) return "";
+    return roundValue ? Math.round(value) : value;
   };
 
   const csbValue = String(exportData.csb ?? user.workAt ?? "").trim();
@@ -234,7 +235,7 @@ export function exportWeeklyReportXLSX({
     [
       "Montant de la facture journalière",
       ...weeklyDates.map((date) =>
-        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "amount"),
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "amount", true),
       ),
     ],
     [
@@ -252,7 +253,7 @@ export function exportWeeklyReportXLSX({
     [
       "Coût moyen",
       ...weeklyDates.map((date) =>
-        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "averageCost"),
+        getNumericCellValue(invoiceMap.get(toDateOnly(date)), "averageCost", true),
       ),
     ],
     [

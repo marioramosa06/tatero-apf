@@ -123,7 +123,7 @@ const MonthlyReports = () => {
                         ...invoice,
                         id: invoice._id,
                         dayName: dayNames[invoiceDate.getDay()],
-                        averageCost: Number(invoice.averageCost ?? (patientCount ? amount / patientCount : 0)).toFixed(2),
+                        averageCost: Math.round(Number(invoice.averageCost ?? (patientCount ? amount / patientCount : 0)) || 0),
                         comment: invoice.comment || ""
                     };
                 }).sort((a, b) => getInvoiceDate(a.date) - getInvoiceDate(b.date));
@@ -191,12 +191,12 @@ const MonthlyReports = () => {
         }
     };
 
-    const totalAmount = invoices.reduce((acc, inv) => acc + Number(inv.amount || 0), 0);
+    const totalAmount = Math.round(invoices.reduce((acc, inv) => acc + Number(inv.amount || 0), 0));
     const totalPatients = invoices.reduce((acc, inv) => acc + Number(inv.nbP || 0), 0);
     const totalOrdonnances = invoices.reduce((acc, inv) => acc + Number(inv.nbOf || 0), 0);
     const totalDays = invoices.length;
-    const avgDailyAmount = totalDays > 0 ? (totalAmount / totalDays).toFixed(2) : "0.00";
-    const overallAvgCost = totalPatients > 0 ? (totalAmount / totalPatients).toFixed(2) : "0.00";
+    const avgDailyAmount = totalDays > 0 ? Math.round(totalAmount / totalDays) : 0;
+    const overallAvgCost = totalPatients > 0 ? Math.round(totalAmount / totalPatients) : 0;
 
     const getFormattedMonthTitle = () => {
         const [y, m] = selectedMonth.split("-");
@@ -232,8 +232,8 @@ const MonthlyReports = () => {
         }
 
         const updatedAvg = modalFormData.nbP > 0
-            ? (modalFormData.amount / modalFormData.nbP).toFixed(2)
-            : "0.00";
+            ? Math.round(Number(modalFormData.amount) / Number(modalFormData.nbP))
+            : 0;
 
         const updatedInvoice = {
             ...modalFormData,
@@ -320,14 +320,14 @@ const MonthlyReports = () => {
                             <div className="summary-card">
                                 <div className="summary-content">
                                     <span className="summary-label">Moyenne / jour</span>
-                                    <h3 className="summary-value">{Number(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
+                                    <h3 className="summary-value">{Math.round(avgDailyAmount).toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
 
                             <div className="summary-card">
                                 <div className="summary-content">
                                     <span className="summary-label">Coût moyen / patient</span>
-                                    <h3 className="summary-value">{Number(overallAvgCost).toLocaleString("fr-FR")} Ar</h3>
+                                    <h3 className="summary-value">{Math.round(overallAvgCost).toLocaleString("fr-FR")} Ar</h3>
                                 </div>
                             </div>
                         </>
@@ -386,9 +386,9 @@ const MonthlyReports = () => {
                                                         <td className="day-cell">{inv.dayName}</td>
                                                         <td className="nb-cell">{inv.nbP}</td>
                                                         <td className="nb-cell">{inv.nbOf}</td>
-                                                        <td className="amount-cell">{Number(inv.amount).toLocaleString("fr-FR")} Ar</td>
+                                                        <td className="amount-cell">{Math.round(Number(inv.amount) || 0).toLocaleString("fr-FR")} Ar</td>
                                                         <td className={`avg-cell ${isHigh ? "avg-high" : ""}`}>
-                                                            {Number(inv.averageCost).toLocaleString("fr-FR")} Ar
+                                                            {Math.round(Number(inv.averageCost) || 0).toLocaleString("fr-FR")} Ar
                                                             {isHigh && <span className="avg-flag">(Élevé)</span>}
                                                         </td>
                                                     </tr>
