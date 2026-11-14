@@ -122,7 +122,7 @@ const SignIn = () => {
             setSuccess("Connexion réussie ! Redirection...");
 
             setTimeout(() => {
-                navigate("/invoices/new");
+                navigate("/dashboard");
             }, 1500);
         } catch (err) {
             setError(err.message || "Une erreur s'est produite lors de la connexion.");

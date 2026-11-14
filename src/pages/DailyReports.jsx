@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAuthHeaders } from "../utils/authHeaders";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
@@ -16,35 +16,97 @@ import {
 import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 
+const formatDateInputValue = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
 const getNextWeekday = (date) => {
-    const [year, month, day] = date.split("-").map(Number);
+    const dateKey = String(date || "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+        return formatDateInputValue(new Date());
+    }
+
+    const [year, month, day] = dateKey.split("-").map(Number);
     const nextDate = new Date(year, month - 1, day + 1);
 
     while (nextDate.getDay() === 0 || nextDate.getDay() === 6) {
         nextDate.setDate(nextDate.getDate() + 1);
     }
 
-    const nextYear = nextDate.getFullYear();
-    const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
-    const nextDay = String(nextDate.getDate()).padStart(2, "0");
-
-    return `${nextYear}-${nextMonth}-${nextDay}`;
+    return formatDateInputValue(nextDate);
 };
 
 const DailyReports = () => {
-    const { user, token } = useAuth()
+    const { user, token } = useAuth();
+    const hasUserEditedDateRef = useRef(false);
 
-    const [error, setError] = useState(null)
-    const [success, setSuccess] = useState(null)
-    const [isPending, setIsPending] = useState(false)
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [isPending, setIsPending] = useState(false);
 
     const [formData, setFormData] = useState({
-        date: new Date().toISOString().split("T")[0],
+        date: formatDateInputValue(new Date()),
         nbP: "",
         nbOf: "",
         amount: "",
         comment: ""
     });
+
+    useEffect(() => {
+        if (!token) return;
+
+        const now = new Date();
+        const startDate = formatDateInputValue(new Date(now.getFullYear(), now.getMonth() - 6, 1));
+        const endDate = formatDateInputValue(new Date(now.getFullYear(), now.getMonth() + 2, 0));
+        const controller = new AbortController();
+
+        const loadLastInvoiceDate = async () => {
+            try {
+                const response = await fetch(
+                    `https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
+                    {
+                        headers: getAuthHeaders(token),
+                        signal: controller.signal
+                    }
+                );
+                if (!response.ok) return;
+
+                const data = await response.json().catch(() => null);
+                if (!Array.isArray(data) || data.length === 0) return;
+
+                const latestInvoice = [...data].sort((a, b) => {
+                    const keyA = String(a?.date || "").slice(0, 10);
+                    const keyB = String(b?.date || "").slice(0, 10);
+                    const dateCmp = keyB.localeCompare(keyA);
+                    if (dateCmp !== 0) return dateCmp;
+
+                    const timeA = new Date(a?.updatedAt || a?.createdAt || 0).getTime() || 0;
+                    const timeB = new Date(b?.updatedAt || b?.createdAt || 0).getTime() || 0;
+                    return timeB - timeA;
+                })[0];
+
+                const lastDateKey = String(latestInvoice?.date || "").slice(0, 10);
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(lastDateKey) || hasUserEditedDateRef.current) {
+                    return;
+                }
+
+                setFormData((prev) => ({
+                    ...prev,
+                    date: getNextWeekday(lastDateKey)
+                }));
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    // Keep default date if prefill lookup fails
+                }
+            }
+        };
+
+        loadLastInvoiceDate();
+        return () => controller.abort();
+    }, [token]);
 
     const calculateAverageCost = () => {
         const patients = parseFloat(formData.nbP);
@@ -60,6 +122,9 @@ const DailyReports = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        if (name === "date") {
+            hasUserEditedDateRef.current = true;
+        }
         setFormData((prev) => ({
             ...prev,
             [name]: value
