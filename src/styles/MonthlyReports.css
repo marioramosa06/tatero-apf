@@ -107,6 +107,24 @@
   vertical-align: middle;
 }
 
+.monthly-export-meta {
+  margin: 0 0 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.monthly-export-meta strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1080px) {
   .monthly-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));

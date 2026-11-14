@@ -46,20 +46,14 @@ function below100(n) {
   const ten = Math.floor(n / 10);
   const one = n % 10;
   if (ten === 7 || ten === 9) {
-    return (
-      TENS[ten] +
-      (one === 0 && ten === 9 ? "s" : "") +
-      (one > 0 ? "-" + ONES[10 + one] : ten === 9 ? "" : "")
-    );
+    const unit = ONES[10 + one];
+    if (ten === 7 && one === 1) {
+      return `${TENS[ten]}-et-${unit}`;
+    }
+    return `${TENS[ten]}-${unit}`;
   }
   if (ten === 8) {
-    return (
-      "quatre-vingts" +
-      (one > 0 ? "-" + ONES[one] : "").replace(
-        "quatre-vingts-",
-        "quatre-vingt-",
-      )
-    );
+    return one === 0 ? "quatre-vingts" : `quatre-vingt-${ONES[one]}`;
   }
   return (
     TENS[ten] +
@@ -127,7 +121,9 @@ function buildTableRows(yearMonth, invoices) {
 
   const byDay = {};
   invoices.forEach((inv) => {
-    const d = new Date(inv.date).getDate();
+    const dateKey = String(inv.date || "").slice(0, 10);
+    const dayPart = Number(dateKey.split("-")[2]);
+    const d = Number.isInteger(dayPart) && dayPart > 0 ? dayPart : new Date(inv.date).getDate();
     byDay[d] = inv;
   });
 
@@ -413,17 +409,49 @@ export function exportWeeklyReportXLSX({
    DRAW INFO BLOCK  (left column: DRSP, SDSP, CSB…)
    ========================================================= */
 
-function drawInfoBlock(doc, info, x, y, lineH = 6) {
+async function loadImageAsset(src) {
+  if (typeof window === "undefined") return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        resolve({
+          dataUrl: canvas.toDataURL("image/png"),
+          width: canvas.width,
+          height: canvas.height,
+        });
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+/* =========================================================
+   DRAW INFO BLOCK  (left column: DRSP, SDSP, CSB…)
+   ========================================================= */
+
+function drawInfoBlock(doc, info, x, y, lineH = 5.5) {
   const fields = [
-    ["DRSP", info.drsp],
-    ["SDSP", info.sdsp],
-    ["CSB", info.csb],
+    ["DRSP", info.drsp || "VATOVAVY"],
+    ["SDSP", info.sdsp || "NOSY-VARIKA"],
+    ["CSB", info.csb || ""],
     ["ANNEE", info.annee],
     ["MOIS", info.mois],
   ];
 
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
+  doc.setTextColor(40, 40, 40);
 
   fields.forEach(([label, value]) => {
     doc.setFont("helvetica", "bold");
@@ -439,17 +467,22 @@ function drawInfoBlock(doc, info, x, y, lineH = 6) {
    PDF EXPORT  — guaranteed single page
    ========================================================= */
 
-export function exportPDF({
+export async function exportPDF({
   yearMonth,
   invoices,
   totalAmount,
   totalPatients,
   totalOrdonnances,
-  info,
+  info = {},
 }) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth(); // 210 mm
   const pageH = doc.internal.pageSize.getHeight(); // 297 mm
+
+  const [msanpLogo, pivotLogo] = await Promise.all([
+    loadImageAsset("/assets/aistudio/logo_msanp_45132971.png"),
+    loadImageAsset("/assets/aistudio/logo_pivot_a7ca9c9b.png"),
+  ]);
 
   // ── Build all table rows first so we know row count ──
   const tableRows = buildTableRows(yearMonth, invoices);
@@ -460,22 +493,15 @@ export function exportPDF({
     fmtAmount(totalAmount),
   ]);
 
-  const rowCount = tableRows.length; // typically 30-31 data rows + 1 TOTAL
+  const rowCount = tableRows.length; // typically 29-31 data rows + 1 TOTAL
 
-  // ── Estimate content height at nominal scale (margin = 15) ──
-  // Logo + title + rule:       14 + 3 + 9 + 7        ≈ 33 mm
-  // Info block (5 lines × 6): 30 mm
-  // Table header:              ~8 mm
-  // Table rows (each ~6.5mm):  rowCount × 6.5
-  // Arrêté text (~10 mm):      10 mm
-  // Signature section:         12 mm
-  // Top + bottom margin:       15 × 2 = 30 mm
-  const NOMINAL_MARGIN = 15;
-  const HEADER_BLOCK = 33;
-  const INFO_BLOCK = 30;
-  const TABLE_HEAD = 8;
-  const ROW_H_NOMINAL = 6.5;
-  const FOOTER_BLOCK = 22; // arrêté + signatures
+  // ── Estimate content height at nominal scale so everything fits on 1 A4 page ──
+  const NOMINAL_MARGIN = 11;
+  const HEADER_BLOCK = 22;
+  const INFO_BLOCK = 28;
+  const TABLE_HEAD = 7;
+  const ROW_H_NOMINAL = 5.2;
+  const FOOTER_BLOCK = 24; // arrêté + signatures
   const estimatedH =
     NOMINAL_MARGIN * 2 +
     HEADER_BLOCK +
@@ -484,49 +510,60 @@ export function exportPDF({
     rowCount * ROW_H_NOMINAL +
     FOOTER_BLOCK;
 
-  // Scale factor: shrink everything proportionally if content exceeds page
-  const scale = Math.min(1, (pageH - 4) / estimatedH); // 4 mm safety buffer
+  const scale = Math.min(1, (pageH - 4) / estimatedH);
   const margin = NOMINAL_MARGIN * scale;
   const rowH = ROW_H_NOMINAL * scale;
 
-  // Scaled font sizes
-  const fzTitle = Math.max(7, 13 * scale);
-  const fzInfo = Math.max(6, 9 * scale);
-  const fzTable = Math.max(5, 8 * scale);
-  const fzHead = Math.max(5, 8.5 * scale);
-  const fzFoot = Math.max(5, 9 * scale);
-  const cellPad = Math.max(1, 2.5 * scale);
-  const lineH = fzInfo * 0.352778 + 1.2; // pt → mm + spacing
+  const fzTitle = Math.max(8, 13 * scale);
+  const fzInfo = Math.max(6.5, 9 * scale);
+  const fzTable = Math.max(5.5, 8 * scale);
+  const fzHead = Math.max(5.5, 8.5 * scale);
+  const fzFoot = Math.max(6, 9 * scale);
+  const cellPad = Math.max(0.9, 1.35 * scale);
+  const lineH = fzInfo * 0.352778 + 1.3 * scale;
 
   let y = margin;
 
-  //   // ── Logo ──
-  //   y = drawLogo(doc, pageW / 2, y, 14 * scale);
+  // ── Top header: Left logo_msanp, Center title, Right logo_pivot ──
+  const logoH = 15 * scale;
+  if (msanpLogo) {
+    const logoW = logoH * (msanpLogo.width / msanpLogo.height);
+    doc.addImage(msanpLogo.dataUrl, "PNG", margin, y, logoW, logoH, undefined, "FAST");
+  }
+  if (pivotLogo) {
+    const logoW = logoH * (pivotLogo.width / pivotLogo.height);
+    doc.addImage(pivotLogo.dataUrl, "PNG", pageW - margin - logoW, y, logoW, logoH, undefined, "FAST");
+  }
 
-  // ── Main Title ──
   doc.setFont("helvetica", "bold");
   doc.setFontSize(fzTitle);
-  doc.setTextColor(30, 30, 30);
-  doc.text("FACTURE COUVERTURE DE SOINS", pageW / 2, y, { align: "center" });
-  y += fzTitle * 0.352778 + 3 * scale;
+  doc.setTextColor(15, 23, 42);
+  doc.text("FACTURE COUVERTURE DE SOINS", pageW / 2, y + logoH / 2, {
+    align: "center",
+    baseline: "middle",
+  });
+
+  y += logoH + 3 * scale;
 
   // ── Thin rule ──
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.3);
   doc.line(margin, y, pageW - margin, y);
-  y += 4 * scale;
+  y += 4.5 * scale;
 
-  // ── Info block ──
+  // ── Info block (left side) ──
   const [yr, mo] = yearMonth.split("-");
-  const monthLabel = new Date(yr, mo - 1).toLocaleDateString("fr-FR", {
+  const monthLabel = new Date(Number(yr), Number(mo) - 1, 1).toLocaleDateString("fr-FR", {
     month: "long",
   });
 
   doc.setFontSize(fzInfo);
-  drawInfoBlock(
+  y = drawInfoBlock(
     doc,
     {
-      ...info,
+      drsp: info.drsp || "VATOVAVY",
+      sdsp: info.sdsp || "NOSY-VARIKA",
+      csb: info.csb || "",
       annee: yr,
       mois: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
     },
@@ -535,41 +572,42 @@ export function exportPDF({
     lineH,
   );
 
-  y += 5 * lineH + 3 * scale; // 5 info lines + small gap
+  y += 2 * scale;
 
   // ── Table ──
   autoTable(doc, {
     startY: y,
-    head: [["Date", "Nombre de patients", "Nombre OF", "Montant (Ar)"]],
+    head: [["Date", "Nombre Patient", "Nombre OF", "Montant"]],
     body: tableRows,
     margin: { left: margin, right: margin },
     tableWidth: pageW - 2 * margin,
     styles: {
       fontSize: fzTable,
       cellPadding: cellPad,
-      lineColor: [220, 220, 220],
+      lineColor: [203, 213, 225],
       lineWidth: 0.2,
-      textColor: [40, 40, 40],
+      textColor: [30, 41, 59],
       minCellHeight: rowH,
+      valign: "middle",
     },
     headStyles: {
-      fillColor: [82, 197, 193],
+      fillColor: [15, 98, 88],
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: fzHead,
+      halign: "center",
     },
-    // TOTAL row styling
     didParseCell(data) {
       if (data.section === "body" && data.row.index === tableRows.length - 1) {
         data.cell.styles.fontStyle = "bold";
-        data.cell.styles.fillColor = [240, 250, 250];
-        data.cell.styles.textColor = [40, 130, 127];
+        data.cell.styles.fillColor = [238, 246, 245];
+        data.cell.styles.textColor = [15, 98, 88];
       }
     },
     columnStyles: {
-      0: { cellWidth: 14 * scale, halign: "center" },
-      1: { cellWidth: 46 * scale, halign: "center" },
-      2: { cellWidth: 30 * scale, halign: "center" },
+      0: { cellWidth: 20 * scale, halign: "center" },
+      1: { cellWidth: 48 * scale, halign: "center" },
+      2: { cellWidth: 44 * scale, halign: "center" },
       3: { cellWidth: "auto", halign: "right" },
     },
   });
@@ -577,39 +615,41 @@ export function exportPDF({
   y = doc.lastAutoTable.finalY + 5 * scale;
 
   // ── Arrêté ──
-  const amountWords = numberToFrenchWords(totalAmount);
-  const arreteText = `Arrêté le présent montant à la somme de : ${amountWords} Ariary`;
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(fzFoot);
-  doc.setTextColor(40, 40, 40);
-  const splitText = doc.splitTextToSize(arreteText, pageW - 2 * margin);
-  doc.text(splitText, margin, y);
-  y += splitText.length * (fzFoot * 0.352778 + 1) + 8 * scale;
-
-  // ── Signatures ──
+  const roundedTotal = Math.round(Number(totalAmount) || 0);
+  const amountWordsUpper = numberToFrenchWords(roundedTotal).toUpperCase();
+  const arreteText = `Arrêté le présent montant à la somme de : ${amountWordsUpper} ARIARY`;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(fzFoot);
-  doc.setTextColor(40, 40, 40);
+  doc.setTextColor(15, 23, 42);
+  const splitText = doc.splitTextToSize(arreteText, pageW - 2 * margin);
+  doc.text(splitText, margin, y);
+  y += splitText.length * (fzFoot * 0.352778 + 1.2) + 8 * scale;
+
+  // ── Signatures (last line: Left Chef CSB, Center Représentant CoGe, Right APF) ──
+  const signatureY = Math.min(pageH - margin - 6 * scale, y);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(fzFoot);
+  doc.setTextColor(30, 41, 59);
 
   const sigLabels = ["Chef CSB", "Représentant CoGe", "APF"];
   const positions = [margin, pageW / 2, pageW - margin];
   const aligns = ["left", "center", "right"];
 
   sigLabels.forEach((label, i) => {
-    doc.text(label, positions[i], y, { align: aligns[i] });
+    doc.text(label, positions[i], signatureY, { align: aligns[i] });
   });
-  y += 4 * scale;
 
-  // Signature lines
-  doc.setDrawColor(160, 160, 160);
+  const lineY = signatureY + 4 * scale;
+  doc.setDrawColor(148, 163, 184);
   doc.setLineWidth(0.3);
-  const lineLen = 40 * scale;
-  doc.line(margin, y, margin + lineLen, y);
-  doc.line(pageW / 2 - lineLen / 2, y, pageW / 2 + lineLen / 2, y);
-  doc.line(pageW - margin - lineLen, y, pageW - margin, y);
+  const lineLen = 38 * scale;
+  doc.line(margin, lineY, margin + lineLen, lineY);
+  doc.line(pageW / 2 - lineLen / 2, lineY, pageW / 2 + lineLen / 2, lineY);
+  doc.line(pageW - margin - lineLen, lineY, pageW - margin, lineY);
 
   // ── Save ──
-  const filename = `facture_${yearMonth}_${(info.csb || "tatero").replace(/\s+/g, "_")}.pdf`;
+  const csbSlug = String(info.csb || "tatero").trim().replace(/\s+/g, "_");
+  const filename = `facture_${yearMonth}_${csbSlug || "tatero"}.pdf`;
   doc.save(filename);
 }
 

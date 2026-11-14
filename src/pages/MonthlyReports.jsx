@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     X,
     Check,
     FileText,
     CalendarDays,
-    ArrowLeft
+    ArrowLeft,
+    Download
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
 import { getAuthHeaders } from "../utils/authHeaders";
+import { exportPDF } from "../utils/exportReport";
 import useAuth from "../hooks/useAuth";
 
 const formatDateInputValue = (date) => {
@@ -30,7 +32,7 @@ const formatDateFr = (dateStr) => {
 };
 
 const MonthlyReports = () => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const today = new Date();
     const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
     const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -43,15 +45,55 @@ const MonthlyReports = () => {
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
 
+    const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [profileUser, setProfileUser] = useState(null);
+    const hasEditedCsbRef = useRef(false);
+    const [exportForm, setExportForm] = useState({
+        sdsp: "NOSY-VARIKA",
+        csb: user?.workAt || ""
+    });
+
+    useEffect(() => {
+        if (!token) return;
+        const controller = new AbortController();
+
+        const fetchUserWorkAt = async () => {
+            try {
+                const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/profile", {
+                    headers: getAuthHeaders(token),
+                    signal: controller.signal
+                });
+                if (!response.ok) return;
+
+                const data = await response.json().catch(() => null);
+                if (!data) return;
+
+                const profile = data.user || data;
+                setProfileUser(profile);
+
+                if (profile?.workAt && !hasEditedCsbRef.current) {
+                    setExportForm((prev) => ({
+                        ...prev,
+                        csb: profile.workAt
+                    }));
+                }
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    // Fallback to cached user.workAt if profile request fails
+                }
+            }
+        };
+
+        fetchUserWorkAt();
+        return () => controller.abort();
+    }, [token]);
+
     useEffect(() => {
         const [year, month] = selectedMonth.split("-").map(Number);
         const startDate = formatDateInputValue(new Date(year, month - 1, 1));
         const endDate = formatDateInputValue(new Date(year, month, 0));
         const controller = new AbortController();
-
-        setLoading(true);
-        setError(null);
-        setInvoices([]);
 
         fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`, {
             headers: getAuthHeaders(token),
@@ -105,7 +147,48 @@ const MonthlyReports = () => {
 
     const handleMonthChange = (e) => {
         const newMonth = e.target.value;
-        if (newMonth) setSelectedMonth(newMonth);
+        if (newMonth && newMonth !== selectedMonth) {
+            setLoading(true);
+            setError(null);
+            setInvoices([]);
+            setSelectedMonth(newMonth);
+        }
+    };
+
+    const openExportModal = () => {
+        setExportModalOpen(true);
+        if (!hasEditedCsbRef.current) {
+            const workAt = profileUser?.workAt || user?.workAt;
+            if (workAt) {
+                setExportForm((prev) => (prev.csb ? prev : { ...prev, csb: workAt }));
+            }
+        }
+    };
+
+    const closeExportModal = () => {
+        setExportModalOpen(false);
+    };
+
+    const handleMonthlyExportPDF = async (e) => {
+        e.preventDefault();
+        setIsExporting(true);
+        try {
+            await exportPDF({
+                yearMonth: selectedMonth,
+                invoices,
+                totalAmount,
+                totalPatients,
+                totalOrdonnances,
+                info: {
+                    drsp: "VATOVAVY",
+                    sdsp: exportForm.sdsp.trim() || "NOSY-VARIKA",
+                    csb: exportForm.csb.trim() || profileUser?.workAt || user?.workAt || ""
+                }
+            });
+            closeExportModal();
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const totalAmount = invoices.reduce((acc, inv) => acc + Number(inv.amount || 0), 0);
@@ -259,6 +342,15 @@ const MonthlyReports = () => {
                                 ? <span className="skeleton-line skeleton-count" aria-hidden="true" />
                                 : <span className="table-count"> · {invoices.length} {invoices.length > 1 ? "factures" : "facture"}</span>}
                         </h2>
+                        <button
+                            type="button"
+                            className="action-btn export-btn"
+                            onClick={openExportModal}
+                            disabled={loading || isExporting}
+                        >
+                            <Download size={16} aria-hidden="true" />
+                            <span>Exporter PDF</span>
+                        </button>
                     </div>
 
                     <div className="table-responsive">
@@ -306,6 +398,61 @@ const MonthlyReports = () => {
                         </table>
                     </div>
                 </main>
+
+                {exportModalOpen && (
+                    <div className="modal-backdrop" onClick={closeExportModal}>
+                        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h3>Exporter le rapport mensuel en PDF</h3>
+                                <button type="button" className="close-btn" onClick={closeExportModal} aria-label="Fermer">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleMonthlyExportPDF} className="modal-body" noValidate>
+                                <p className="monthly-export-meta">
+                                    DRSP : <strong>VATOVAVY</strong>
+                                    <span aria-hidden="true"> · </span>
+                                    Période : <strong className="month-capitalize">{getFormattedMonthTitle()}</strong>
+                                </p>
+
+                                <div className="form-grid">
+                                    <div className="form-group">
+                                        <label htmlFor="monthly-export-sdsp">SDSP</label>
+                                        <input
+                                            id="monthly-export-sdsp"
+                                            type="text"
+                                            value={exportForm.sdsp}
+                                            onChange={(e) => setExportForm((prev) => ({ ...prev, sdsp: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="monthly-export-csb">CSB</label>
+                                        <input
+                                            id="monthly-export-csb"
+                                            type="text"
+                                            value={exportForm.csb}
+                                            onChange={(e) => {
+                                                hasEditedCsbRef.current = true;
+                                                setExportForm((prev) => ({ ...prev, csb: e.target.value }));
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button type="button" className="btn-secondary" onClick={closeExportModal} disabled={isExporting}>
+                                        Annuler
+                                    </button>
+                                    <button type="submit" className="submit-btn" disabled={isExporting}>
+                                        <Download size={16} aria-hidden="true" />
+                                        {isExporting ? "Exportation..." : "Exporter PDF"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
 
                 {activeModal && modalFormData && (
                     <div className="modal-backdrop" onClick={handleCloseModal}>
