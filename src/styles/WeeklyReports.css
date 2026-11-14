@@ -406,6 +406,37 @@
   outline-offset: 2px;
 }
 
+.action-btn.export-btn {
+  min-height: 40px;
+  padding: 0.55rem 1.15rem;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-btn.export-btn:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.action-btn.export-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn.export-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .month-capitalize {
   text-transform: capitalize;
 }

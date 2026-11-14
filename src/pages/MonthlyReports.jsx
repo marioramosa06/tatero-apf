@@ -349,7 +349,7 @@ const MonthlyReports = () => {
                             disabled={loading || isExporting}
                         >
                             <Download size={16} aria-hidden="true" />
-                            <span>Exporter PDF</span>
+                            <span>Exporter le recap mensuel</span>
                         </button>
                     </div>
 

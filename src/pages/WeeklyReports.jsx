@@ -509,7 +509,7 @@ const WeeklyReports = () => {
                                     onClick={openExportModal}
                                 >
                                     <Download size={16} aria-hidden="true" />
-                                    <span>Exporter Excel</span>
+                                    <span>Exporter le rapport hebdo</span>
                                 </button>
                             </div>
 

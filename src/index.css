@@ -32,6 +32,7 @@
 
   --accent: #0f6258;
   --accent-hover: #0b4d45;
+  --accent-contrast: #ffffff;
   --accent-soft: #eef6f5;
 
   /* Semantic States */
@@ -88,6 +89,7 @@
 
     --accent: #34a89a;
     --accent-hover: #4dc0b2;
+    --accent-contrast: #0b0f17;
     --accent-soft: rgba(52, 168, 154, 0.12);
 
     --secondary: #fbbf24;
