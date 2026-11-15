@@ -15,6 +15,10 @@ const Navbar = () => {
                         <span>Tableau de bord</span>
                     </NavLink>
 
+                    <NavLink to="/invoices" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+                        <span>Factures</span>
+                    </NavLink>
+
                     <NavLink to="/invoices/new" className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
                         <span>Journalier</span>
                     </NavLink>

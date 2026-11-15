@@ -6,6 +6,7 @@ const AppLayout = () => {
     const location = useLocation();
 
     const showNavPaths = [
+        "/invoices",
         "/invoices/new",
         "/dashboard",
         "/reports/week",

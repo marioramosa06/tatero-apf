@@ -365,8 +365,8 @@ const Dashboard = () => {
                                     </p>
                                 )}
                             </div>
-                            <Link to="/invoices/new" className="dashboard-panel-link">
-                                Nouvelle facture <ArrowRight aria-hidden="true" />
+                            <Link to="/invoices" className="dashboard-panel-link">
+                                Toutes les factures <ArrowRight aria-hidden="true" />
                             </Link>
                         </div>
 
@@ -495,6 +495,11 @@ const Dashboard = () => {
                             <Link to="/invoices/new" className="dashboard-shortcut">
                                 <span className="dashboard-shortcut-icon"><FilePlus aria-hidden="true" /></span>
                                 <span><strong>Nouvelle facture</strong><small>Enregistrer l'activité du jour</small></span>
+                                <ArrowRight className="dashboard-shortcut-arrow" aria-hidden="true" />
+                            </Link>
+                            <Link to="/invoices" className="dashboard-shortcut">
+                                <span className="dashboard-shortcut-icon"><Receipt aria-hidden="true" /></span>
+                                <span><strong>Toutes les factures</strong><small>Consulter, modifier ou supprimer</small></span>
                                 <ArrowRight className="dashboard-shortcut-arrow" aria-hidden="true" />
                             </Link>
                             <Link to="/reports/week" className="dashboard-shortcut">
