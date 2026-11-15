@@ -1,4 +1,5 @@
 import { createContext, useState } from 'react'
+import { clearOfflineUserCache } from '../utils/offlineStore'
 
 export const AuthContext = createContext(null)
 
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    clearOfflineUserCache()
     setToken(null)
     setUser(null)
   }

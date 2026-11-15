@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
-import { getAuthHeaders } from "../utils/authHeaders";
+import { fetchInvoicesRangeWithCache, fetchProfileWithCache } from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
 import { exportPDF } from "../utils/exportReport";
 import useAuth from "../hooks/useAuth";
 
@@ -68,16 +69,12 @@ const MonthlyReports = () => {
 
         const fetchUserWorkAt = async () => {
             try {
-                const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/profile", {
-                    headers: getAuthHeaders(token),
+                const profile = await fetchProfileWithCache({
+                    token,
                     signal: controller.signal
                 });
-                if (!response.ok) return;
+                if (!profile) return;
 
-                const data = await response.json().catch(() => null);
-                if (!data) return;
-
-                const profile = data.user || data;
                 setProfileUser(profile);
 
                 if (profile?.workAt && !hasEditedCsbRef.current) {
@@ -101,26 +98,17 @@ const MonthlyReports = () => {
         const [year, month] = selectedMonth.split("-").map(Number);
         const startDate = formatDateInputValue(new Date(year, month - 1, 1));
         const endDate = formatDateInputValue(new Date(year, month, 0));
-        const controller = new AbortController();
+        let controller = new AbortController();
 
-        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`, {
-            headers: getAuthHeaders(token),
-            signal: controller.signal
-        })
-            .then(async (response) => {
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        throw new Error("Votre session a expiré. Veuillez vous reconnecter pour consulter vos factures.");
-                    }
-                    throw new Error(data?.error || data?.message || "Impossible de charger les factures de ce mois.");
-                }
-                if (!Array.isArray(data)) {
-                    throw new Error("La réponse du serveur est invalide. Impossible d'afficher les factures.");
-                }
-                return data;
-            })
-            .then((data) => {
+        const loadMonthInvoices = async () => {
+            try {
+                const { invoices: data } = await fetchInvoicesRangeWithCache({
+                    token,
+                    startDate,
+                    endDate,
+                    signal: controller.signal
+                });
+
                 const dayNames = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
                 const monthlyInvoices = data.map((invoice) => {
                     const invoiceDate = getInvoiceDate(invoice.date);
@@ -129,15 +117,15 @@ const MonthlyReports = () => {
 
                     return {
                         ...invoice,
-                        id: invoice._id,
+                        id: invoice._id ?? invoice.id,
                         dayName: dayNames[invoiceDate.getDay()],
                         averageCost: Math.round(Number(invoice.averageCost ?? (patientCount ? amount / patientCount : 0)) || 0),
                         comment: invoice.comment || ""
                     };
                 }).sort((a, b) => getInvoiceDate(a.date) - getInvoiceDate(b.date));
                 setInvoices(monthlyInvoices);
-            })
-            .catch((requestError) => {
+                setError(null);
+            } catch (requestError) {
                 if (requestError.name === "AbortError") return;
                 const message = requestError.message || "";
                 setError(
@@ -145,12 +133,23 @@ const MonthlyReports = () => {
                         ? "Impossible de joindre le serveur. Vérifiez votre connexion Internet, puis réessayez."
                         : message || "Impossible de charger les factures de ce mois."
                 );
-            })
-            .finally(() => {
+            } finally {
                 if (!controller.signal.aborted) setLoading(false);
-            });
+            }
+        };
 
-        return () => controller.abort();
+        const handleSyncComplete = () => {
+            controller.abort();
+            controller = new AbortController();
+            loadMonthInvoices();
+        };
+
+        loadMonthInvoices();
+        window.addEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        return () => {
+            controller.abort();
+            window.removeEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        };
     }, [selectedMonth, token]);
 
     const applySelectedMonth = (nextMonth) => {

@@ -324,8 +324,22 @@
 }
 
 .invoices-date-main {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   font-weight: 500;
   white-space: nowrap;
+}
+
+.pending-sync-tag {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--warning-border);
+  border-radius: 5px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .invoices-comment-note {

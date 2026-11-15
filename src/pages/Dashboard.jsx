@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
-import { getAuthHeaders } from "../utils/authHeaders";
+import { fetchInvoicesRangeWithCache } from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
 import "../styles/Dashboard.css";
 
 const formatDateInputValue = (date) => {
@@ -174,30 +175,18 @@ const Dashboard = () => {
     }, []);
 
     useEffect(() => {
-        const controller = new AbortController();
+        let controller = new AbortController();
 
         const loadInvoices = async () => {
             try {
-                const response = await fetch(
-                    `https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${periods.fetchStart}&endDate=${periods.fetchEnd}`,
-                    {
-                        headers: getAuthHeaders(token),
-                        signal: controller.signal
-                    }
-                );
-                const data = await response.json().catch(() => ({}));
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
-                    }
-                    throw new Error(data?.error || data?.message || "Impossible de charger les données du tableau de bord.");
-                }
-                if (!Array.isArray(data)) {
-                    throw new Error("La réponse du serveur est invalide.");
-                }
-
-                setInvoices(data);
+                const { invoices: list } = await fetchInvoicesRangeWithCache({
+                    token,
+                    startDate: periods.fetchStart,
+                    endDate: periods.fetchEnd,
+                    signal: controller.signal
+                });
+                setInvoices(list);
+                setError(null);
             } catch (requestError) {
                 if (requestError.name !== "AbortError") {
                     setError(requestError.message || "Impossible de charger les données du tableau de bord.");
@@ -207,8 +196,18 @@ const Dashboard = () => {
             }
         };
 
+        const handleSyncComplete = () => {
+            controller.abort();
+            controller = new AbortController();
+            loadInvoices();
+        };
+
         loadInvoices();
-        return () => controller.abort();
+        window.addEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        return () => {
+            controller.abort();
+            window.removeEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        };
     }, [token, periods.fetchStart, periods.fetchEnd]);
 
     const {

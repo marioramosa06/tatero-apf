@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { CircleUserRound } from "lucide-react";
+import PWAInstallButton from "./PWAInstallButton";
 import "../styles/NavBar.css";
 
 const Navbar = () => {
@@ -33,6 +34,7 @@ const Navbar = () => {
                 </nav>
 
                 <div className="nav-actions">
+                    <PWAInstallButton />
                     <NavLink
                         to="/profile"
                         className={({ isActive }) => isActive ? "nav-profile-btn active" : "nav-profile-btn"}

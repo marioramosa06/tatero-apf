@@ -11,7 +11,12 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
-import { getAuthHeaders } from "../utils/authHeaders";
+import {
+    fetchAllInvoicesWithCache,
+    submitDeleteInvoice,
+    submitUpdateInvoice
+} from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
 import {
     filterInvoices,
     formatInvoiceDate,
@@ -41,57 +46,43 @@ const Invoices = () => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchInvoices = useCallback(async (signal) => {
-        const response = await fetch("https://api-tatero-apf.vercel.app/api/invoices", {
-            headers: getAuthHeaders(token),
-            signal
-        });
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
-            }
-            throw new Error(data?.error || data?.message || "Impossible de charger les factures.");
-        }
-
-        const list = Array.isArray(data)
-            ? data
-            : Array.isArray(data?.invoices)
-                ? data.invoices
-                : null;
-
-        if (!list) {
-            throw new Error("La réponse du serveur est invalide.");
-        }
-
+        const { invoices: list } = await fetchAllInvoicesWithCache({ token, signal });
         return list;
     }, [token]);
 
     useEffect(() => {
-        const controller = new AbortController();
+        let controller = new AbortController();
 
-        fetchInvoices(controller.signal)
-            .then((list) => {
-                setInvoices(list);
-                setError(null);
-            })
-            .catch((requestError) => {
-                if (requestError.name !== "AbortError") {
-                    const message = requestError.message || "";
-                    setError(
-                        message.toLowerCase().includes("fetch") || message.toLowerCase().includes("network")
-                            ? "Impossible de joindre le serveur. Vérifiez votre connexion Internet, puis réessayez."
-                            : message || "Impossible de charger les factures."
-                    );
-                }
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) {
-                    setLoading(false);
-                }
-            });
+        const loadAll = () => {
+            fetchInvoices(controller.signal)
+                .then((list) => {
+                    setInvoices(list);
+                    setError(null);
+                })
+                .catch((requestError) => {
+                    if (requestError.name !== "AbortError") {
+                        setError(requestError.message || "Impossible de charger les factures.");
+                    }
+                })
+                .finally(() => {
+                    if (!controller.signal.aborted) {
+                        setLoading(false);
+                    }
+                });
+        };
 
-        return () => controller.abort();
+        const handleSyncComplete = () => {
+            controller.abort();
+            controller = new AbortController();
+            loadAll();
+        };
+
+        loadAll();
+        window.addEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        return () => {
+            controller.abort();
+            window.removeEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        };
     }, [fetchInvoices]);
 
     const handleRetry = () => {
@@ -192,31 +183,12 @@ const Invoices = () => {
 
         setIsSaving(true);
         try {
-            const response = await fetch(
-                `https://api-tatero-apf.vercel.app/api/invoices/${encodeURIComponent(invoiceId)}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...getAuthHeaders(token)
-                    },
-                    body: JSON.stringify(payload)
-                }
-            );
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok || data?.error) {
-                throw new Error(data?.error || data?.message || "Impossible d'enregistrer les modifications.");
-            }
-
-            const updatedInvoice = {
-                ...editingInvoice,
-                ...payload,
-                ...data,
-                _id: data._id ?? editingInvoice._id,
-                id: data.id ?? data._id ?? editingInvoice.id,
-                averageCost: data.averageCost ?? updatedAvg
-            };
+            const { invoice: updatedInvoice } = await submitUpdateInvoice({
+                token,
+                invoiceId,
+                payload,
+                existingInvoice: editingInvoice
+            });
 
             setInvoices((prev) =>
                 prev.map((inv) =>
@@ -255,18 +227,7 @@ const Invoices = () => {
         setIsDeleting(true);
         setDeleteError(null);
         try {
-            const response = await fetch(
-                `https://api-tatero-apf.vercel.app/api/invoices/${encodeURIComponent(invoiceId)}`,
-                {
-                    method: "DELETE",
-                    headers: getAuthHeaders(token)
-                }
-            );
-            const data = await response.json().catch(() => ({}));
-
-            if (!response.ok || data?.error) {
-                throw new Error(data?.error || data?.message || "Impossible de supprimer cette facture.");
-            }
+            await submitDeleteInvoice({ token, invoiceId });
 
             setInvoices((prev) =>
                 prev.filter((inv) => String(inv._id ?? inv.id) !== String(invoiceId))
@@ -439,7 +400,12 @@ const Invoices = () => {
                                                                 <tr key={invId}>
                                                                     <td className="invoices-date-cell">
                                                                         <div className="invoices-date-stack">
-                                                                            <span className="invoices-date-main">{formatInvoiceDate(dateKey)}</span>
+                                                                            <span className="invoices-date-main">
+                                                                                {formatInvoiceDate(dateKey)}
+                                                                                {inv.pendingSync && (
+                                                                                    <span className="pending-sync-tag">En attente</span>
+                                                                                )}
+                                                                            </span>
                                                                             {inv.comment && (
                                                                                 <span className="invoices-comment-note">{inv.comment}</span>
                                                                             )}

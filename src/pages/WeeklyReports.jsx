@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getAuthHeaders } from "../utils/authHeaders";
+import {
+    fetchInvoicesRangeWithCache,
+    fetchProfileWithCache,
+    submitUpdateInvoice
+} from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
 import { exportWeeklyReportXLSX } from "../utils/exportReport";
 import { Link } from "react-router-dom";
 import {
@@ -148,16 +153,12 @@ const WeeklyReports = () => {
 
         const fetchUserWorkAt = async () => {
             try {
-                const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/profile", {
-                    headers: getAuthHeaders(token),
+                const profile = await fetchProfileWithCache({
+                    token,
                     signal: controller.signal
                 });
-                if (!response.ok) return;
+                if (!profile) return;
 
-                const data = await response.json().catch(() => null);
-                if (!data) return;
-
-                const profile = data.user || data;
                 setProfileUser(profile);
 
                 if (profile?.workAt && !hasEditedCsbRef.current) {
@@ -248,25 +249,12 @@ const WeeklyReports = () => {
 
         setIsSaving(true);
         try {
-            const response = await fetch(`https://api-tatero-apf.vercel.app/api/invoices/${encodeURIComponent(invoiceId)}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...getAuthHeaders(token)
-                },
-                body: JSON.stringify(submissionData)
+            const { invoice: updatedInvoice } = await submitUpdateInvoice({
+                token,
+                invoiceId,
+                payload: submissionData,
+                existingInvoice: modalFormData
             });
-            const data = await response.json();
-            if (!response.ok || data?.error) {
-                throw new Error(data?.error || "Impossible d'enregistrer les modifications.");
-            }
-
-            const updatedInvoice = {
-                ...modalFormData,
-                ...data,
-                id: data.id ?? data._id ?? modalFormData.id,
-                averageCost: data.averageCost ?? updatedAvg
-            };
             const originalInvoice = activeModal.invoice;
 
             setInvoices((prev) => prev.map((invoice) =>
@@ -284,24 +272,17 @@ const WeeklyReports = () => {
     };
 
     useEffect(() => {
-        const controller = new AbortController();
+        let controller = new AbortController();
 
-        fetch(`https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
-            {
-                headers: {
-                    ...getAuthHeaders(token)
-                },
-                signal: controller.signal
-            }
-        )
-            .then(async (res) => {
-                const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data?.error || "Impossible de charger les factures.");
-                }
-                return data;
-            })
-            .then((dat) => {
+        const loadWeekInvoices = async () => {
+            try {
+                const { invoices: dat } = await fetchInvoicesRangeWithCache({
+                    token,
+                    startDate,
+                    endDate,
+                    signal: controller.signal
+                });
+
                 const list = Array.isArray(dat) ? dat : [];
                 let sumAmount = 0;
                 let sumPatients = 0;
@@ -318,17 +299,29 @@ const WeeklyReports = () => {
                 setTotalOf(sumOf);
                 setInvoices(list);
                 setError(null);
-            }).catch((err) => {
+            } catch (err) {
                 if (err.name === "AbortError") return;
                 setError(err.message || "Impossible de charger les factures.");
                 setInvoices([]);
-            }).finally(() => {
+            } finally {
                 if (!controller.signal.aborted) {
                     setLoading(false);
                 }
-            });
+            }
+        };
 
-        return () => controller.abort();
+        const handleSyncComplete = () => {
+            controller.abort();
+            controller = new AbortController();
+            loadWeekInvoices();
+        };
+
+        loadWeekInvoices();
+        window.addEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        return () => {
+            controller.abort();
+            window.removeEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
+        };
     }, [startDate, endDate, token]);
 
     return (

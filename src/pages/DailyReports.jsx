@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { getAuthHeaders } from "../utils/authHeaders";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { fetchInvoicesRangeWithCache, submitCreateInvoice } from "../utils/invoiceApi";
 import {
     Calendar,
     Users,
@@ -65,16 +65,12 @@ const DailyReports = () => {
 
         const loadLastInvoiceDate = async () => {
             try {
-                const response = await fetch(
-                    `https://api-tatero-apf.vercel.app/api/invoices/range?startDate=${startDate}&endDate=${endDate}`,
-                    {
-                        headers: getAuthHeaders(token),
-                        signal: controller.signal
-                    }
-                );
-                if (!response.ok) return;
-
-                const data = await response.json().catch(() => null);
+                const { invoices: data } = await fetchInvoicesRangeWithCache({
+                    token,
+                    startDate,
+                    endDate,
+                    signal: controller.signal
+                });
                 if (!Array.isArray(data) || data.length === 0) return;
 
                 const latestInvoice = [...data].sort((a, b) => {
@@ -131,10 +127,10 @@ const DailyReports = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null)
-        setSuccess(null)
+        setError(null);
+        setSuccess(null);
 
         if (!formData.date) {
             setError("Veuillez sélectionner une date.");
@@ -157,43 +153,40 @@ const DailyReports = () => {
             return;
         }
 
-        setIsPending(true)
+        setIsPending(true);
         const submissionData = {
             ...formData,
             averageCost: calculateAverageCost(),
-            user: user._id
+            user: user?._id
         };
 
-        fetch("https://api-tatero-apf.vercel.app/api/invoices", {
-            headers: {
-                "Content-Type": "application/json",
-                ...getAuthHeaders(token)
-            },
-            method: "POST",
-            body: JSON.stringify(submissionData)
-        })
-            .then(async (res) => {
-                const data = await res.json();
-                if (!res.ok || data?.error) {
-                    throw new Error(data?.error || "Impossible d'enregistrer la facture.");
-                }
-                return data;
-            })
-            .then((data) => {
-                setFormData({
-                    date: getNextWeekday(submissionData.date),
-                    nbP: "",
-                    nbOf: "",
-                    amount: "",
-                    comment: ""
-                })
-                setSuccess(`Enregistrement d'une facture de ${Math.round(Number(data.amount) || 0).toLocaleString("fr-FR")} Ar pour la date du ${data.date.split("T")[0]} réussi.`)
-                setIsPending(false)
-            }).catch((err) => {
-                setError(err.message)
-                setIsPending(false)
-            })
-    }
+        try {
+            const { invoice: saved, queued } = await submitCreateInvoice({
+                token,
+                payload: submissionData
+            });
+
+            setFormData({
+                date: getNextWeekday(submissionData.date),
+                nbP: "",
+                nbOf: "",
+                amount: "",
+                comment: ""
+            });
+
+            const formattedAmount = Math.round(Number(saved.amount) || 0).toLocaleString("fr-FR");
+            const dateStr = String(saved.date || submissionData.date).split("T")[0];
+            setSuccess(
+                queued
+                    ? `Mode hors ligne : facture de ${formattedAmount} Ar pour le ${dateStr} enregistrée localement (en attente de synchronisation).`
+                    : `Enregistrement d'une facture de ${formattedAmount} Ar pour la date du ${dateStr} réussi.`
+            );
+        } catch (err) {
+            setError(err.message || "Impossible d'enregistrer la facture.");
+        } finally {
+            setIsPending(false);
+        }
+    };
 
     return (
         <>

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BriefcaseBusiness, CalendarDays, LogOut, Mail, UserRound } from "lucide-react";
 import Footer from "../components/Footer";
+import PWAInstallButton from "../components/PWAInstallButton";
 import useAuth from "../hooks/useAuth";
-import { getAuthHeaders } from "../utils/authHeaders";
+import { fetchProfileWithCache } from "../utils/invoiceApi";
 import "../styles/Profile.css";
 
 const Profile = () => {
@@ -18,17 +19,13 @@ const Profile = () => {
 
         const loadProfile = async () => {
             try {
-                const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/profile", {
-                    headers: getAuthHeaders(token),
+                const cachedOrLive = await fetchProfileWithCache({
+                    token,
                     signal: controller.signal
                 });
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data?.message || "Impossible de charger votre profil.");
+                if (cachedOrLive) {
+                    setProfile(cachedOrLive);
                 }
-
-                setProfile(data);
             } catch (requestError) {
                 if (requestError.name !== "AbortError") {
                     setError(requestError.message || "Impossible de charger votre profil.");
@@ -108,6 +105,7 @@ const Profile = () => {
                         </dl>
 
                         <div className="profile-actions">
+                            <PWAInstallButton />
                             <button className="profile-logout-action" type="button" onClick={handleLogout}>
                                 <LogOut aria-hidden="true" /> Se déconnecter
                             </button>

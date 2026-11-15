@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./NavBar";
 import BottomNav from "./BottomNav";
+import OfflineIndicator from "./OfflineIndicator";
 
 const AppLayout = () => {
     const location = useLocation();
@@ -23,6 +24,8 @@ const AppLayout = () => {
             <main className={`app-main-content${shouldShowNav ? " with-nav" : ""}`}>
                 <Outlet />
             </main>
+
+            <OfflineIndicator />
 
             {shouldShowNav && <BottomNav />}
         </div>

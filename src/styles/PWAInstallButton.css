@@ -1,0 +1,136 @@
+.pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  height: 36px;
+  padding: 0 0.85rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pwa-install-btn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.pwa-install-btn.pwa-install-ios {
+  background: var(--card-bg);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.pwa-install-btn.pwa-install-ios:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-strong);
+}
+
+.pwa-install-btn.pwa-install-full {
+  width: 100%;
+  height: 42px;
+}
+
+.pwa-install-btn:focus-visible,
+.pwa-ios-close:focus-visible,
+.pwa-ios-confirm:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pwa-ios-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(2px);
+}
+
+.pwa-ios-modal {
+  width: min(100%, 400px);
+  padding: 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+  box-shadow: var(--shadow-hover);
+}
+
+.pwa-ios-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pwa-ios-modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.pwa-ios-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.pwa-ios-close:hover {
+  background: var(--bg-muted);
+  color: var(--text-main);
+}
+
+.pwa-ios-steps {
+  margin: 1rem 0 1.15rem;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.pwa-ios-steps strong {
+  color: var(--text-main);
+}
+
+.pwa-ios-share-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  color: var(--accent);
+}
+
+.pwa-ios-confirm {
+  width: 100%;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pwa-ios-confirm:hover {
+  background: var(--primary-hover);
+}
