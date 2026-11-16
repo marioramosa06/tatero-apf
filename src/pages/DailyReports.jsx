@@ -42,7 +42,7 @@ const getNextWeekday = (date) => {
 };
 
 const DailyReports = () => {
-    const { user, token } = useAuth();
+    const { token } = useAuth();
     const [draftRestored, setDraftRestored] = useState(() => Boolean(loadDailyDraft()));
     const hasUserEditedDateRef = useRef(Boolean(loadDailyDraft()?.date));
 
@@ -189,9 +189,12 @@ const DailyReports = () => {
 
         setIsPending(true);
         const submissionData = {
-            ...formData,
+            date: formData.date,
+            nbP: Number(formData.nbP),
+            nbOf: Number(formData.nbOf),
+            amount: Number(formData.amount),
             averageCost: calculateAverageCost(),
-            user: user?._id
+            comment: formData.comment.trim()
         };
 
         try {

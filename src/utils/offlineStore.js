@@ -1,8 +1,15 @@
+import { API_BASE_URL, notifyAuthExpired } from "./apiConfig";
+
 const CACHE_INVOICES_KEY = "tatero_offline_invoices_v1";
 const CACHE_PROFILE_KEY = "tatero_offline_profile_v1";
 const OFFLINE_QUEUE_KEY = "tatero_offline_queue_v1";
 const OFFLINE_META_KEY = "tatero_offline_meta_v1";
 const DAILY_DRAFT_KEY = "tatero_daily_draft_v1";
+
+const MAX_BACKUP_INVOICES = 5000;
+const MAX_BACKUP_QUEUE = 500;
+const SAFE_ID_REGEX = /^[a-zA-Z0-9_-]{1,100}$/;
+const DATE_PREFIX_REGEX = /^\d{4}-\d{2}-\d{2}/;
 
 export const OFFLINE_CHANGE_EVENT = "tatero:offline-change";
 export const OFFLINE_SYNC_COMPLETE_EVENT = "tatero:sync-complete";
@@ -404,6 +411,106 @@ export const exportOfflineBackupData = (storage) => ({
     pendingQueue: getPendingQueue(storage)
 });
 
+const isPlainObject = (value) =>
+    Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const sanitizeSafeId = (value) => {
+    const str = String(value ?? "").trim();
+    return SAFE_ID_REGEX.test(str) ? str : null;
+};
+
+const sanitizeInvoicePayload = (raw, { requireDate = true } = {}) => {
+    if (!isPlainObject(raw)) return null;
+
+    const payload = {};
+    if (requireDate || raw.date !== undefined) {
+        const dateStr = String(raw.date ?? "").trim();
+        if (!DATE_PREFIX_REGEX.test(dateStr)) return null;
+        payload.date = dateStr.slice(0, 32);
+    }
+
+    const nbP = Number(raw.nbP);
+    const nbOf = Number(raw.nbOf);
+    const amount = Number(raw.amount);
+
+    if (!Number.isInteger(nbP) || nbP < 0 || nbP > 1_000_000) return null;
+    if (!Number.isInteger(nbOf) || nbOf < 0 || nbOf > 1_000_000) return null;
+    if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000_000_000) return null;
+
+    payload.nbP = nbP;
+    payload.nbOf = nbOf;
+    payload.amount = amount;
+
+    const rawAvg = raw.averageCost !== undefined ? Number(raw.averageCost) : (nbP > 0 ? Math.round(amount / nbP) : 0);
+    payload.averageCost = Number.isFinite(rawAvg) && rawAvg >= 0 ? Math.round(rawAvg) : 0;
+    payload.comment = typeof raw.comment === "string" ? raw.comment.slice(0, 2000) : "";
+
+    return payload;
+};
+
+const sanitizeInvoiceRecord = (raw) => {
+    if (!isPlainObject(raw)) return null;
+    const payload = sanitizeInvoicePayload(raw, { requireDate: true });
+    if (!payload) return null;
+
+    const record = {
+        date: payload.date,
+        nbP: payload.nbP,
+        nbOf: payload.nbOf,
+        amount: payload.amount,
+        averageCost: payload.averageCost,
+        comment: payload.comment,
+        pendingSync: Boolean(raw.pendingSync)
+    };
+
+    const safeObjectId = sanitizeSafeId(raw._id);
+    const safeId = sanitizeSafeId(raw.id);
+    if (safeObjectId) record._id = safeObjectId;
+    if (safeId) record.id = safeId;
+    if (typeof raw.createdAt === "string") record.createdAt = raw.createdAt.slice(0, 64);
+    if (typeof raw.updatedAt === "string") record.updatedAt = raw.updatedAt.slice(0, 64);
+
+    return record;
+};
+
+const sanitizeQueuedOperation = (op) => {
+    if (!isPlainObject(op)) return null;
+    const queueId = sanitizeSafeId(op.queueId);
+    const invoiceId = sanitizeSafeId(op.invoiceId);
+    if (!queueId || !invoiceId) return null;
+
+    const createdAt = typeof op.createdAt === "string" ? op.createdAt.slice(0, 64) : new Date().toISOString();
+
+    if (op.type === "create") {
+        if (!isOfflineTempId(invoiceId)) return null;
+        const payload = sanitizeInvoicePayload(op.payload, { requireDate: true });
+        if (!payload) return null;
+        const invoice = sanitizeInvoiceRecord(
+            isPlainObject(op.invoice)
+                ? { ...op.invoice, _id: invoiceId, id: invoiceId, pendingSync: true }
+                : { ...payload, _id: invoiceId, id: invoiceId, createdAt, updatedAt: createdAt, pendingSync: true }
+        );
+        if (!invoice) return null;
+        return { queueId, type: "create", invoiceId, payload, invoice, createdAt };
+    }
+
+    if (op.type === "update") {
+        if (isOfflineTempId(invoiceId)) return null;
+        const payload = sanitizeInvoicePayload(op.payload, { requireDate: false });
+        if (!payload) return null;
+        const previousInvoice = op.previousInvoice ? sanitizeInvoiceRecord(op.previousInvoice) : null;
+        return { queueId, type: "update", invoiceId, payload, previousInvoice, createdAt };
+    }
+
+    if (op.type === "delete") {
+        if (isOfflineTempId(invoiceId)) return null;
+        const previousInvoice = op.previousInvoice ? sanitizeInvoiceRecord(op.previousInvoice) : null;
+        return { queueId, type: "delete", invoiceId, previousInvoice, createdAt };
+    }
+
+    return null;
+};
+
 export const importOfflineBackupData = (backup, storage) => {
     if (!backup || typeof backup !== "object") {
         throw new Error("Fichier de sauvegarde invalide.");
@@ -419,9 +526,13 @@ export const importOfflineBackupData = (backup, storage) => {
         throw new Error("Aucune facture valide détectée dans cette sauvegarde.");
     }
 
-    const validInvoices = incomingInvoices.filter(
-        (item) => item && typeof item === "object" && /^\d{4}-\d{2}-\d{2}/.test(String(item.date || ""))
-    );
+    if (incomingInvoices.length > MAX_BACKUP_INVOICES) {
+        throw new Error(`La sauvegarde dépasse la limite autorisée (${MAX_BACKUP_INVOICES} factures).`);
+    }
+
+    const validInvoices = incomingInvoices
+        .map(sanitizeInvoiceRecord)
+        .filter(Boolean);
 
     const existing = readCachedInvoices(storage);
     const byId = new Map();
@@ -437,17 +548,24 @@ export const importOfflineBackupData = (backup, storage) => {
         if (!byId.has(key)) {
             importedCount += 1;
         }
-        byId.set(key, { ...inv });
+        byId.set(key, inv);
     });
 
     const existingQueue = getPendingQueue(storage);
-    let nextQueue = [...existingQueue];
-    if (Array.isArray(backup.pendingQueue)) {
+    const nextQueue = [...existingQueue];
+    if (backup.pendingQueue !== undefined) {
+        if (!Array.isArray(backup.pendingQueue) || backup.pendingQueue.length > MAX_BACKUP_QUEUE) {
+            throw new Error("La file d'attente de la sauvegarde est invalide ou trop volumineuse.");
+        }
         const seenQueueIds = new Set(existingQueue.map((op) => op.queueId));
-        for (const op of backup.pendingQueue) {
-            if (op && typeof op === "object" && op.queueId && !seenQueueIds.has(op.queueId)) {
-                nextQueue.push(op);
-                seenQueueIds.add(op.queueId);
+        for (const rawOp of backup.pendingQueue) {
+            const safeOp = sanitizeQueuedOperation(rawOp);
+            if (!safeOp) {
+                throw new Error("Le fichier de sauvegarde contient des opérations en attente invalides.");
+            }
+            if (!seenQueueIds.has(safeOp.queueId)) {
+                nextQueue.push(safeOp);
+                seenQueueIds.add(safeOp.queueId);
             }
         }
     }
@@ -477,7 +595,7 @@ let activeSyncPromise = null;
 
 export const syncOfflineQueue = async ({
     token,
-    apiBase = "https://api-tatero-apf.vercel.app/api",
+    apiBase = API_BASE_URL,
     fetchImpl = typeof fetch !== "undefined" ? fetch : null,
     storage
 } = {}) => {
@@ -504,6 +622,10 @@ export const syncOfflineQueue = async ({
                         },
                         body: JSON.stringify(op.payload)
                     });
+                    if (response.status === 401) {
+                        notifyAuthExpired();
+                        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+                    }
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok || data?.error) {
                         throw new Error(data?.error || data?.message || `Erreur serveur (${response.status})`);
@@ -535,6 +657,10 @@ export const syncOfflineQueue = async ({
                             body: JSON.stringify(op.payload)
                         }
                     );
+                    if (response.status === 401) {
+                        notifyAuthExpired();
+                        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+                    }
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok || data?.error) {
                         throw new Error(data?.error || data?.message || `Erreur serveur (${response.status})`);
@@ -559,6 +685,10 @@ export const syncOfflineQueue = async ({
                             }
                         }
                     );
+                    if (response.status === 401) {
+                        notifyAuthExpired();
+                        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+                    }
                     if (!response.ok && response.status !== 404) {
                         const data = await response.json().catch(() => ({}));
                         throw new Error(data?.error || data?.message || `Erreur serveur (${response.status})`);

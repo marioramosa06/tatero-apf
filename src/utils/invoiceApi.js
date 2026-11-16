@@ -1,3 +1,4 @@
+import { API_BASE_URL, notifyAuthExpired } from "./apiConfig";
 import { getAuthHeaders } from "./authHeaders";
 import {
     enqueueCreateInvoice,
@@ -13,7 +14,7 @@ import {
     setLastSyncedAt
 } from "./offlineStore";
 
-const API_BASE = "https://api-tatero-apf.vercel.app/api";
+const SESSION_EXPIRED_MSG = "Votre session a expiré. Veuillez vous reconnecter.";
 
 export const isOfflineOrNetworkError = (err) => {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
@@ -39,8 +40,12 @@ export const fetchInvoicesRangeWithCache = async ({ token, startDate, endDate, s
     }
 
     try {
+        const params = new URLSearchParams({
+            startDate: String(startDate || ""),
+            endDate: String(endDate || "")
+        });
         const response = await fetch(
-            `${API_BASE}/invoices/range?startDate=${startDate}&endDate=${endDate}`,
+            `${API_BASE_URL}/invoices/range?${params.toString()}`,
             {
                 headers: getAuthHeaders(token),
                 signal
@@ -50,7 +55,8 @@ export const fetchInvoicesRangeWithCache = async ({ token, startDate, endDate, s
 
         if (!response.ok) {
             if (response.status === 401) {
-                throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+                notifyAuthExpired();
+                throw new Error(SESSION_EXPIRED_MSG);
             }
             throw new Error(data?.error || data?.message || "Impossible de charger les factures.");
         }
@@ -86,7 +92,7 @@ export const fetchAllInvoicesWithCache = async ({ token, signal }) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/invoices`, {
+        const response = await fetch(`${API_BASE_URL}/invoices`, {
             headers: getAuthHeaders(token),
             signal
         });
@@ -94,7 +100,8 @@ export const fetchAllInvoicesWithCache = async ({ token, signal }) => {
 
         if (!response.ok) {
             if (response.status === 401) {
-                throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+                notifyAuthExpired();
+                throw new Error(SESSION_EXPIRED_MSG);
             }
             throw new Error(data?.error || data?.message || "Impossible de charger les factures.");
         }
@@ -135,10 +142,14 @@ export const fetchProfileWithCache = async ({ token, signal }) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/auth/profile`, {
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
             headers: getAuthHeaders(token),
             signal
         });
+        if (response.status === 401) {
+            notifyAuthExpired();
+            return null;
+        }
         if (!response.ok) {
             return getCachedProfile();
         }
@@ -180,7 +191,7 @@ export const submitCreateInvoice = async ({ token, payload }) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/invoices`, {
+        const response = await fetch(`${API_BASE_URL}/invoices`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -188,6 +199,10 @@ export const submitCreateInvoice = async ({ token, payload }) => {
             },
             body: JSON.stringify(payload)
         });
+        if (response.status === 401) {
+            notifyAuthExpired();
+            throw new Error(SESSION_EXPIRED_MSG);
+        }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data?.error) {
             throw new Error(data?.error || data?.message || "Impossible d'enregistrer la facture.");
@@ -217,7 +232,7 @@ export const submitUpdateInvoice = async ({ token, invoiceId, payload, existingI
 
     try {
         const response = await fetch(
-            `${API_BASE}/invoices/${encodeURIComponent(invoiceId)}`,
+            `${API_BASE_URL}/invoices/${encodeURIComponent(invoiceId)}`,
             {
                 method: "PUT",
                 headers: {
@@ -227,6 +242,10 @@ export const submitUpdateInvoice = async ({ token, invoiceId, payload, existingI
                 body: JSON.stringify(payload)
             }
         );
+        if (response.status === 401) {
+            notifyAuthExpired();
+            throw new Error(SESSION_EXPIRED_MSG);
+        }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data?.error) {
             throw new Error(data?.error || data?.message || "Impossible d'enregistrer les modifications.");
@@ -269,12 +288,16 @@ export const submitDeleteInvoice = async ({ token, invoiceId }) => {
 
     try {
         const response = await fetch(
-            `${API_BASE}/invoices/${encodeURIComponent(invoiceId)}`,
+            `${API_BASE_URL}/invoices/${encodeURIComponent(invoiceId)}`,
             {
                 method: "DELETE",
                 headers: getAuthHeaders(token)
             }
         );
+        if (response.status === 401) {
+            notifyAuthExpired();
+            throw new Error(SESSION_EXPIRED_MSG);
+        }
         const data = await response.json().catch(() => ({}));
         if (!response.ok || data?.error) {
             throw new Error(data?.error || data?.message || "Impossible de supprimer cette facture.");

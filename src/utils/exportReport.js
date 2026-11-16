@@ -2,6 +2,21 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import XLSX from "xlsx-js-style";
 
+const FORMULA_PREFIX_REGEX = /^[\s\u00A0]*[=+\-@\t\r]/;
+
+function sanitizeSpreadsheetText(value) {
+  if (value === undefined || value === null) return "";
+  const str = String(value);
+  return FORMULA_PREFIX_REGEX.test(str) ? `'${str}` : str;
+}
+
+function sanitizeStockCell(value) {
+  if (value === undefined || value === null || value === "") return "";
+  const num = Number(value);
+  if (Number.isFinite(num)) return num;
+  return sanitizeSpreadsheetText(value);
+}
+
 /* =========================================================
    NUMBER → FRENCH WORDS  (for Ariary total)
    ========================================================= */
@@ -213,21 +228,24 @@ export function exportWeeklyReportXLSX({
     return roundValue ? Math.round(value) : value;
   };
 
-  const csbValue = String(exportData.csb ?? user.workAt ?? "").trim();
+  const csbValue = sanitizeSpreadsheetText(String(exportData.csb ?? user.workAt ?? "").trim());
+  const districtValue = sanitizeSpreadsheetText(exportData.district ?? "NOSY-VARIKA");
+  const apfNameValue = sanitizeSpreadsheetText(user.name || user.fullName || "");
+  const intrantsValue = sanitizeSpreadsheetText(exportData.intrants || "");
 
   const stock = {
-    OF: exportData.stock?.OF ?? "",
-    RCS: exportData.stock?.RCS ?? "",
-    ticketBlanc: exportData.stock?.ticketBlanc ?? "",
-    ticketBleu: exportData.stock?.ticketBleu ?? "",
-    preRUMER: exportData.stock?.preRUMER ?? "",
+    OF: sanitizeStockCell(exportData.stock?.OF),
+    RCS: sanitizeStockCell(exportData.stock?.RCS),
+    ticketBlanc: sanitizeStockCell(exportData.stock?.ticketBlanc),
+    ticketBleu: sanitizeStockCell(exportData.stock?.ticketBleu),
+    preRUMER: sanitizeStockCell(exportData.stock?.preRUMER),
   };
 
   const rows = [
     ["Rapport hebdomadaire du projet Couverture de soins au niveau CSB"],
-    ["District:", exportData.district ?? "NOSY-VARIKA"],
+    ["District:", districtValue],
     ["CSB:", csbValue],
-    ["Nom et prénom (s) de l'APF:", user.name || user.fullName || ""],
+    ["Nom et prénom (s) de l'APF:", apfNameValue],
     [],
     [],
     ["FACTURES"],
@@ -258,9 +276,11 @@ export function exportWeeklyReportXLSX({
     ],
     [
       "Remarque",
-      ...weeklyDates.map((date) => invoiceMap.get(toDateOnly(date))?.comment || ""),
+      ...weeklyDates.map((date) =>
+        sanitizeSpreadsheetText(invoiceMap.get(toDateOnly(date))?.comment || ""),
+      ),
     ],
-    ["Intrants rupture à la PhaGeCom", exportData.intrants || ""],
+    ["Intrants rupture à la PhaGeCom", intrantsValue],
     [],
     [],
     ["OUTILS DE GESTION"],
@@ -377,8 +397,9 @@ export function exportWeeklyReportXLSX({
   XLSX.utils.book_append_sheet(workbook, worksheet, "Rapport hebdo");
 
   // 8. Prefix export filename with CSB value
-  const sanitizedCsb = csbValue
-    .replace(/[\\/:*?"<>|\s]+/g, "_")
+  const sanitizedCsb = String(exportData.csb ?? user.workAt ?? "")
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, "_")
     .replace(/^_+|_+$/g, "");
   const csbPrefix = sanitizedCsb ? `${sanitizedCsb}_` : "";
   const filename = `${csbPrefix}rapport_hebdo_${startDate}_au_${endDate || startDate}.xlsx`;
@@ -649,7 +670,10 @@ export async function exportPDF({
   doc.line(pageW - margin - lineLen, lineY, pageW - margin, lineY);
 
   // ── Save ──
-  const csbSlug = String(info.csb || "tatero").trim().replace(/\s+/g, "_");
+  const csbSlug = String(info.csb || "tatero")
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
   const filename = `facture_${yearMonth}_${csbSlug || "tatero"}.pdf`;
   doc.save(filename);
 }
@@ -674,9 +698,9 @@ export function exportCSV({
   const rows = [
     ["FACTURE COUVERTURE DE SOINS"],
     [],
-    ["DRSP", info.drsp || ""],
-    ["SDSP", info.sdsp || ""],
-    ["CSB", info.csb || ""],
+    ["DRSP", sanitizeSpreadsheetText(info.drsp || "")],
+    ["SDSP", sanitizeSpreadsheetText(info.sdsp || "")],
+    ["CSB", sanitizeSpreadsheetText(info.csb || "")],
     ["ANNEE", yr],
     ["MOIS", monthLabel],
     [],
@@ -700,7 +724,9 @@ export function exportCSV({
 
   const csv = rows
     .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";"),
+      row
+        .map((cell) => `"${sanitizeSpreadsheetText(cell).replace(/"/g, '""')}"`)
+        .join(";"),
     )
     .join("\n");
 

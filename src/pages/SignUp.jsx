@@ -14,6 +14,7 @@ import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 import PasswordInput from "../components/PasswordInput";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import { API_BASE_URL } from "../utils/apiConfig";
 
 const getFriendlyAuthError = (message) => {
     const normalized = String(message || "").trim();
@@ -112,8 +113,8 @@ const SignUp = () => {
         if (!formData.password) {
             setError("Veuillez entrer votre nouveau mot de passe.");
             return;
-        } else if (formData.password.length < 6) {
-            setError("Votre mot de passe doit contenir au moins 6 caractères.");
+        } else if (formData.password.length < 8) {
+            setError("Votre mot de passe doit contenir au moins 8 caractères.");
             return;
         } else if (formData.password !== formData.confirmPassword) {
             setError("Les mots de passe ne correspondent pas.");
@@ -122,7 +123,7 @@ const SignUp = () => {
 
         setIsPending(true);
         try {
-            const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/signup", {
+            const response = await fetch(`${API_BASE_URL}/auth/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -185,6 +186,7 @@ const SignUp = () => {
                                     type="text"
                                     id="name"
                                     name="name"
+                                    autoComplete="name"
                                     placeholder="ex: Rakotondrabe Koto"
                                     value={formData.name}
                                     onChange={handleChange}
@@ -228,6 +230,7 @@ const SignUp = () => {
                                     type="email"
                                     id="email"
                                     name="email"
+                                    autoComplete="email"
                                     placeholder="ex: rakoto@mailaka.com"
                                     value={formData.email}
                                     onChange={handleChange}
@@ -243,6 +246,7 @@ const SignUp = () => {
                                     type="text"
                                     id="workAt"
                                     name="workAt"
+                                    autoComplete="organization"
                                     placeholder="ex: CSB1 Anivorano"
                                     value={formData.workAt}
                                     onChange={handleChange}
@@ -257,10 +261,11 @@ const SignUp = () => {
                                 <PasswordInput
                                     id="password"
                                     name="password"
-                                    placeholder="Nouveau mot de passe"
+                                    autoComplete="new-password"
+                                    placeholder="Nouveau mot de passe (min. 8 caractères)"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    minLength={6}
+                                    minLength={8}
                                 />
                             </div>
 
@@ -272,10 +277,11 @@ const SignUp = () => {
                                 <PasswordInput
                                     id="confirmPassword"
                                     name="confirmPassword"
+                                    autoComplete="new-password"
                                     placeholder="Confirmer le mot de passe"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    minLength={6}
+                                    minLength={8}
                                 />
                             </div>
                         </div>

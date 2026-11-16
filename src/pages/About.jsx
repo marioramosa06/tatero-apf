@@ -13,10 +13,7 @@ import {
 import "../styles/About.css";
 import Footer from "../components/Footer";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
-
-const API_BASE_URL = (
-    import.meta.env.VITE_API_URL || "https://api-tatero-apf.vercel.app/api"
-).replace(/\/+$/, "");
+import { API_BASE_URL } from "../utils/apiConfig";
 
 const About = () => {
     const { isOnline } = useOnlineStatus();

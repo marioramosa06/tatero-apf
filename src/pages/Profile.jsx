@@ -190,8 +190,15 @@ const Profile = () => {
         event.target.value = "";
         if (!file) return;
 
+        const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
         setOfflineError(null);
         setOfflineNotice(null);
+
+        if (file.size > MAX_BACKUP_BYTES) {
+            setOfflineError("Le fichier de sauvegarde est trop volumineux (maximum 5 Mo).");
+            return;
+        }
+
         try {
             const text = await file.text();
             const parsed = JSON.parse(text);

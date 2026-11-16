@@ -12,6 +12,7 @@ import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import PasswordInput from "../components/PasswordInput";
+import { API_BASE_URL } from "../utils/apiConfig";
 
 const getFriendlyAuthError = (message) => {
     const normalized = String(message || "").trim();
@@ -101,7 +102,7 @@ const SignIn = () => {
 
         setIsPending(true);
         try {
-            const response = await fetch("https://api-tatero-apf.vercel.app/api/auth/signin", {
+            const response = await fetch(`${API_BASE_URL}/auth/signin`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -166,6 +167,7 @@ const SignIn = () => {
                                     type="email"
                                     id="email"
                                     name="email"
+                                    autoComplete="email"
                                     placeholder="rakoto@mailaka.com"
                                     value={formData.email}
                                     onChange={handleChange}
@@ -180,6 +182,7 @@ const SignIn = () => {
                                 <PasswordInput
                                     id="password"
                                     name="password"
+                                    autoComplete="current-password"
                                     placeholder="Votre mot de passe"
                                     value={formData.password}
                                     onChange={handleChange}
