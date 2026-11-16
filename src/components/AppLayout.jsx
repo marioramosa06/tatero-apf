@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "./NavBar";
 import BottomNav from "./BottomNav";
 import OfflineIndicator from "./OfflineIndicator";
+import PWAInstallButton from "./PWAInstallButton";
 
 const AppLayout = () => {
     const location = useLocation();
@@ -26,6 +27,7 @@ const AppLayout = () => {
             </main>
 
             <OfflineIndicator />
+            <PWAInstallButton />
 
             {shouldShowNav && <BottomNav />}
         </div>

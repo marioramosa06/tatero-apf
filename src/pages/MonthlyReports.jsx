@@ -12,8 +12,12 @@ import {
 } from "lucide-react";
 import "../styles/MonthlyReports.css";
 import Footer from "../components/Footer";
-import { fetchInvoicesRangeWithCache, fetchProfileWithCache } from "../utils/invoiceApi";
-import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
+import {
+    fetchInvoicesRangeWithCache,
+    fetchProfileWithCache,
+    submitUpdateInvoice
+} from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT, getLastSyncedAt } from "../utils/offlineStore";
 import { exportPDF } from "../utils/exportReport";
 import useAuth from "../hooks/useAuth";
 
@@ -47,12 +51,14 @@ const MonthlyReports = () => {
     const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [fromCache, setFromCache] = useState(false);
 
     const [invoices, setInvoices] = useState([]);
 
     const [activeModal, setActiveModal] = useState(null);
     const [modalFormData, setModalFormData] = useState(null);
     const [modalError, setModalError] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [exportModalOpen, setExportModalOpen] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -102,7 +108,7 @@ const MonthlyReports = () => {
 
         const loadMonthInvoices = async () => {
             try {
-                const { invoices: data } = await fetchInvoicesRangeWithCache({
+                const { invoices: data, fromCache: isCached } = await fetchInvoicesRangeWithCache({
                     token,
                     startDate,
                     endDate,
@@ -124,6 +130,7 @@ const MonthlyReports = () => {
                     };
                 }).sort((a, b) => getInvoiceDate(a.date) - getInvoiceDate(b.date));
                 setInvoices(monthlyInvoices);
+                setFromCache(Boolean(isCached));
                 setError(null);
             } catch (requestError) {
                 if (requestError.name === "AbortError") return;
@@ -222,12 +229,13 @@ const MonthlyReports = () => {
     };
 
     const handleCloseModal = () => {
+        if (isSaving) return;
         setActiveModal(null);
         setModalFormData(null);
         setModalError(null);
     };
 
-    const handleModalSubmit = (e) => {
+    const handleModalSubmit = async (e) => {
         e.preventDefault();
         setModalError(null);
         if (!modalFormData || activeModal?.mode !== "edit") return;
@@ -248,18 +256,52 @@ const MonthlyReports = () => {
             return;
         }
 
-        const updatedAvg = modalFormData.nbP > 0
+        const invoiceId = modalFormData._id ?? modalFormData.id;
+        if (!invoiceId) {
+            setModalError("Impossible d'identifier cette facture.");
+            return;
+        }
+
+        const updatedAvg = Number(modalFormData.nbP) > 0
             ? Math.round(Number(modalFormData.amount) / Number(modalFormData.nbP))
             : 0;
 
-        const updatedInvoice = {
-            ...modalFormData,
-            averageCost: updatedAvg
-        };
+        setIsSaving(true);
+        try {
+            const { invoice: savedInvoice } = await submitUpdateInvoice({
+                token,
+                invoiceId,
+                payload: {
+                    nbP: Number(modalFormData.nbP),
+                    nbOf: Number(modalFormData.nbOf),
+                    amount: Number(modalFormData.amount),
+                    averageCost: updatedAvg,
+                    comment: modalFormData.comment || ""
+                },
+                existingInvoice: modalFormData
+            });
 
-        setInvoices((prev) => prev.map((inv) => inv.id === updatedInvoice.id ? updatedInvoice : inv));
-        handleCloseModal();
+            const updatedInvoice = {
+                ...modalFormData,
+                ...savedInvoice,
+                id: savedInvoice._id ?? savedInvoice.id ?? invoiceId,
+                averageCost: updatedAvg
+            };
+
+            setInvoices((prev) => prev.map((inv) =>
+                String(inv._id ?? inv.id) === String(invoiceId) ? updatedInvoice : inv
+            ));
+            setActiveModal(null);
+            setModalFormData(null);
+            setModalError(null);
+        } catch (err) {
+            setModalError(err.message || "Impossible d'enregistrer les modifications.");
+        } finally {
+            setIsSaving(false);
+        }
     };
+
+    const lastSyncedAt = getLastSyncedAt();
 
     return (
         <>
@@ -329,6 +371,21 @@ const MonthlyReports = () => {
                 </section>
 
                 {error && <div className="alert error" role="alert">{error}</div>}
+                {!loading && fromCache && (
+                    <div className="offline-cache-note" role="status">
+                        <span>Affichage des données enregistrées localement (mode hors ligne).</span>
+                        {lastSyncedAt && (
+                            <span>
+                                Dernière synchro : {new Date(lastSyncedAt).toLocaleString("fr-FR", {
+                                    day: "numeric",
+                                    month: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                })}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 <section className="summary-grid monthly-summary">
                     {loading ? (
@@ -531,7 +588,7 @@ const MonthlyReports = () => {
                                     <FileText className="field-icon" aria-hidden="true" />
                                     {activeModal.mode === "edit" ? "Modifier la facture" : "Détails de la facture"}
                                 </h3>
-                                <button type="button" className="close-btn" onClick={handleCloseModal} aria-label="Fermer">
+                                <button type="button" className="close-btn" onClick={handleCloseModal} aria-label="Fermer" disabled={isSaving}>
                                     <X size={18} />
                                 </button>
                             </div>
@@ -548,7 +605,7 @@ const MonthlyReports = () => {
                                         <input
                                             type="number"
                                             value={modalFormData.nbP}
-                                            disabled={activeModal.mode === "view"}
+                                            disabled={activeModal.mode === "view" || isSaving}
                                             onChange={(e) => {
                                                 setModalError(null);
                                                 setModalFormData({ ...modalFormData, nbP: e.target.value });
@@ -561,7 +618,7 @@ const MonthlyReports = () => {
                                         <input
                                             type="number"
                                             value={modalFormData.nbOf}
-                                            disabled={activeModal.mode === "view"}
+                                            disabled={activeModal.mode === "view" || isSaving}
                                             onChange={(e) => {
                                                 setModalError(null);
                                                 setModalFormData({ ...modalFormData, nbOf: e.target.value });
@@ -575,7 +632,7 @@ const MonthlyReports = () => {
                                             type="number"
                                             step="0.01"
                                             value={modalFormData.amount}
-                                            disabled={activeModal.mode === "view"}
+                                            disabled={activeModal.mode === "view" || isSaving}
                                             onChange={(e) => {
                                                 setModalError(null);
                                                 setModalFormData({ ...modalFormData, amount: e.target.value });
@@ -591,7 +648,7 @@ const MonthlyReports = () => {
                                             <textarea
                                                 rows="3"
                                                 value={modalFormData.comment}
-                                                disabled={activeModal.mode === "view"}
+                                                disabled={activeModal.mode === "view" || isSaving}
                                                 onChange={(e) => {
                                                     setModalError(null);
                                                     setModalFormData({ ...modalFormData, comment: e.target.value });
@@ -602,12 +659,12 @@ const MonthlyReports = () => {
                                 </div>
 
                                 <div className="modal-actions">
-                                    <button type="button" className="btn-secondary" onClick={handleCloseModal}>
+                                    <button type="button" className="btn-secondary" onClick={handleCloseModal} disabled={isSaving}>
                                         Fermer
                                     </button>
                                     {activeModal.mode === "edit" && (
-                                        <button type="submit" className="submit-btn">
-                                            <Check size={16} aria-hidden="true" /> Enregistrer
+                                        <button type="submit" className="submit-btn" disabled={isSaving}>
+                                            <Check size={16} aria-hidden="true" /> {isSaving ? "Enregistrement..." : "Enregistrer"}
                                         </button>
                                     )}
                                 </div>

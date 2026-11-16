@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import "../styles/Homepage.css";
 import Footer from "../components/Footer";
-import PWAInstallButton from "../components/PWAInstallButton";
 import useAuth from "../hooks/useAuth";
 
 const Homepage = () => {
@@ -28,7 +27,6 @@ const Homepage = () => {
                         <Link to="/about" className="homepage-top-link">
                             À propos
                         </Link>
-                        <PWAInstallButton />
                         {isAuthenticated && (
                             <Link to="/profile" className="homepage-top-btn">
                                 <UserRound size={15} aria-hidden="true" />

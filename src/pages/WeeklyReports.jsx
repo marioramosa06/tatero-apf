@@ -97,6 +97,7 @@ const WeeklyReports = () => {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [fromCache, setFromCache] = useState(false);
 
     const applyDateRange = (nextRange) => {
         if (nextRange.startDate === startDate && nextRange.endDate === endDate) {
@@ -276,7 +277,7 @@ const WeeklyReports = () => {
 
         const loadWeekInvoices = async () => {
             try {
-                const { invoices: dat } = await fetchInvoicesRangeWithCache({
+                const { invoices: dat, fromCache: isCached } = await fetchInvoicesRangeWithCache({
                     token,
                     startDate,
                     endDate,
@@ -298,6 +299,7 @@ const WeeklyReports = () => {
                 setTotalPatient(sumPatients);
                 setTotalOf(sumOf);
                 setInvoices(list);
+                setFromCache(Boolean(isCached));
                 setError(null);
             } catch (err) {
                 if (err.name === "AbortError") return;
@@ -454,6 +456,11 @@ const WeeklyReports = () => {
                 )}
 
                 {error && <div className="alert error" role="alert">{error}</div>}
+                {!loading && fromCache && (
+                    <div className="offline-cache-note" role="status">
+                        <span>Affichage des données hors ligne depuis le cache local.</span>
+                    </div>
+                )}
 
                 {!loading && invoices && (
                     <>

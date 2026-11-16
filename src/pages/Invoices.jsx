@@ -32,6 +32,7 @@ const Invoices = () => {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [fromCache, setFromCache] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [onlyHighAvg, setOnlyHighAvg] = useState(false);
@@ -46,8 +47,8 @@ const Invoices = () => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchInvoices = useCallback(async (signal) => {
-        const { invoices: list } = await fetchAllInvoicesWithCache({ token, signal });
-        return list;
+        const result = await fetchAllInvoicesWithCache({ token, signal });
+        return result;
     }, [token]);
 
     useEffect(() => {
@@ -55,8 +56,9 @@ const Invoices = () => {
 
         const loadAll = () => {
             fetchInvoices(controller.signal)
-                .then((list) => {
+                .then(({ invoices: list, fromCache: isCached }) => {
                     setInvoices(list);
+                    setFromCache(Boolean(isCached));
                     setError(null);
                 })
                 .catch((requestError) => {
@@ -89,8 +91,9 @@ const Invoices = () => {
         setLoading(true);
         setError(null);
         fetchInvoices()
-            .then((list) => {
+            .then(({ invoices: list, fromCache: isCached }) => {
                 setInvoices(list);
+                setFromCache(Boolean(isCached));
             })
             .catch((requestError) => {
                 setError(requestError.message || "Impossible de charger les factures.");
@@ -298,6 +301,12 @@ const Invoices = () => {
                         )}
                     </div>
                 </section>
+
+                {!loading && fromCache && (
+                    <div className="offline-cache-note" role="status">
+                        <span>Affichage hors ligne depuis le cache local.</span>
+                    </div>
+                )}
 
                 {error && (
                     <div className="invoices-error-box" role="alert">

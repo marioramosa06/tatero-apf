@@ -1,4 +1,5 @@
 import { CheckCircle2, CloudOff, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import "../styles/OfflineIndicator.css";
 
@@ -55,16 +56,23 @@ const OfflineIndicator = () => {
                 </span>
             </div>
 
-            {isOnline && pendingCount > 0 && (
-                <button
-                    type="button"
-                    className="offline-sync-btn"
-                    onClick={syncNow}
-                    disabled={isSyncing}
-                >
-                    {isSyncing ? "En cours..." : "Synchroniser"}
-                </button>
-            )}
+            <div className="offline-indicator-actions">
+                {isOnline && pendingCount > 0 && (
+                    <button
+                        type="button"
+                        className="offline-sync-btn"
+                        onClick={syncNow}
+                        disabled={isSyncing}
+                    >
+                        {isSyncing ? "En cours..." : "Synchroniser"}
+                    </button>
+                )}
+                {(!isOnline || pendingCount > 0) && (
+                    <Link to="/profile#offline" className="offline-manage-link">
+                        Gérer
+                    </Link>
+                )}
+            </div>
 
             {syncError && isOnline && pendingCount > 0 && (
                 <span className="offline-sync-error">{syncError}</span>

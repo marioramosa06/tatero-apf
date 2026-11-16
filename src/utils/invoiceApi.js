@@ -5,10 +5,12 @@ import {
     enqueueUpdateInvoice,
     getCachedInvoicesInRange,
     getCachedProfile,
+    getLastSyncedAt,
     isOfflineTempId,
     mergeCachedInvoices,
     readCachedInvoices,
-    saveCachedProfile
+    saveCachedProfile,
+    setLastSyncedAt
 } from "./offlineStore";
 
 const API_BASE = "https://api-tatero-apf.vercel.app/api";
@@ -57,6 +59,7 @@ export const fetchInvoicesRangeWithCache = async ({ token, startDate, endDate, s
         }
 
         mergeCachedInvoices(data, { startDate, endDate });
+        setLastSyncedAt();
         return {
             invoices: getCachedInvoicesInRange(startDate, endDate),
             fromCache: false
@@ -107,6 +110,7 @@ export const fetchAllInvoicesWithCache = async ({ token, signal }) => {
         }
 
         const merged = mergeCachedInvoices(list, null);
+        setLastSyncedAt();
         return {
             invoices: merged,
             fromCache: false
@@ -149,6 +153,26 @@ export const fetchProfileWithCache = async ({ token, signal }) => {
     }
 };
 
+export const prefetchAllOfflineData = async ({ token, signal } = {}) => {
+    if (!token) {
+        throw new Error("Connexion requise pour préparer le mode hors ligne.");
+    }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        throw new Error("Connexion Internet requise pour actualiser le cache hors ligne.");
+    }
+
+    const [{ invoices, fromCache }] = await Promise.all([
+        fetchAllInvoicesWithCache({ token, signal }),
+        fetchProfileWithCache({ token, signal }).catch(() => null)
+    ]);
+
+    return {
+        cachedCount: invoices.length,
+        fromCache,
+        lastSyncedAt: getLastSyncedAt()
+    };
+};
+
 export const submitCreateInvoice = async ({ token, payload }) => {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
         const localInvoice = enqueueCreateInvoice(payload);
@@ -171,6 +195,7 @@ export const submitCreateInvoice = async ({ token, payload }) => {
 
         const existing = readCachedInvoices();
         mergeCachedInvoices([data, ...existing], null);
+        setLastSyncedAt();
         return { invoice: data, queued: false };
     } catch (err) {
         if (isOfflineOrNetworkError(err)) {
@@ -222,6 +247,7 @@ export const submitUpdateInvoice = async ({ token, invoiceId, payload, existingI
             ),
             null
         );
+        setLastSyncedAt();
         return { invoice: updatedInvoice, queued: false };
     } catch (err) {
         if (isOfflineOrNetworkError(err)) {
@@ -259,6 +285,7 @@ export const submitDeleteInvoice = async ({ token, invoiceId }) => {
             cached.filter((inv) => String(inv._id ?? inv.id) !== String(invoiceId)),
             null
         );
+        setLastSyncedAt();
         return { queued: false };
     } catch (err) {
         if (isOfflineOrNetworkError(err)) {

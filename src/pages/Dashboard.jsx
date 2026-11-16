@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
-import { fetchInvoicesRangeWithCache } from "../utils/invoiceApi";
-import { OFFLINE_SYNC_COMPLETE_EVENT } from "../utils/offlineStore";
+import { fetchInvoicesRangeWithCache, prefetchAllOfflineData } from "../utils/invoiceApi";
+import { OFFLINE_SYNC_COMPLETE_EVENT, getLastSyncedAt } from "../utils/offlineStore";
 import "../styles/Dashboard.css";
 
 const formatDateInputValue = (date) => {
@@ -125,6 +125,7 @@ const Dashboard = () => {
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [fromCache, setFromCache] = useState(false);
 
     const periods = useMemo(() => {
         const now = new Date();
@@ -179,13 +180,14 @@ const Dashboard = () => {
 
         const loadInvoices = async () => {
             try {
-                const { invoices: list } = await fetchInvoicesRangeWithCache({
+                const { invoices: list, fromCache: isCached } = await fetchInvoicesRangeWithCache({
                     token,
                     startDate: periods.fetchStart,
                     endDate: periods.fetchEnd,
                     signal: controller.signal
                 });
                 setInvoices(list);
+                setFromCache(Boolean(isCached));
                 setError(null);
             } catch (requestError) {
                 if (requestError.name !== "AbortError") {
@@ -209,6 +211,19 @@ const Dashboard = () => {
             window.removeEventListener(OFFLINE_SYNC_COMPLETE_EVENT, handleSyncComplete);
         };
     }, [token, periods.fetchStart, periods.fetchEnd]);
+
+    useEffect(() => {
+        if (!token || (typeof navigator !== "undefined" && !navigator.onLine)) return undefined;
+        const lastSynced = getLastSyncedAt();
+        const isStale = !lastSynced || Date.now() - new Date(lastSynced).getTime() > 15 * 60 * 1000;
+        if (!isStale) return undefined;
+
+        const controller = new AbortController();
+        prefetchAllOfflineData({ token, signal: controller.signal }).catch(() => {
+            // Best-effort background cache warmup
+        });
+        return () => controller.abort();
+    }, [token]);
 
     const {
         curMonthStats,
@@ -343,6 +358,11 @@ const Dashboard = () => {
                     </section>
 
                     {error && <div className="alert error" role="alert">{error}</div>}
+                    {!loading && fromCache && (
+                        <div className="offline-cache-note" role="status">
+                            <span>Affichage des données en cache local (mode hors ligne).</span>
+                        </div>
+                    )}
 
                     <section className="dashboard-panel" aria-labelledby="last-invoice-title">
                         <div className="dashboard-panel-header">

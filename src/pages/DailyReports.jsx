@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { fetchInvoicesRangeWithCache, submitCreateInvoice } from "../utils/invoiceApi";
+import { clearDailyDraft, loadDailyDraft, saveDailyDraft } from "../utils/offlineStore";
 import {
     Calendar,
     Users,
@@ -11,7 +12,8 @@ import {
     MessageSquareText,
     Save,
     Loader,
-    ArrowLeft
+    ArrowLeft,
+    RotateCcw
 } from "lucide-react";
 import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
@@ -41,18 +43,22 @@ const getNextWeekday = (date) => {
 
 const DailyReports = () => {
     const { user, token } = useAuth();
-    const hasUserEditedDateRef = useRef(false);
+    const [draftRestored, setDraftRestored] = useState(() => Boolean(loadDailyDraft()));
+    const hasUserEditedDateRef = useRef(Boolean(loadDailyDraft()?.date));
 
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isPending, setIsPending] = useState(false);
 
-    const [formData, setFormData] = useState({
-        date: formatDateInputValue(new Date()),
-        nbP: "",
-        nbOf: "",
-        amount: "",
-        comment: ""
+    const [formData, setFormData] = useState(() => {
+        const draft = loadDailyDraft();
+        return {
+            date: draft?.date || formatDateInputValue(new Date()),
+            nbP: draft?.nbP ?? "",
+            nbOf: draft?.nbOf ?? "",
+            amount: draft?.amount ?? "",
+            comment: draft?.comment ?? ""
+        };
     });
 
     useEffect(() => {
@@ -104,6 +110,20 @@ const DailyReports = () => {
         return () => controller.abort();
     }, [token]);
 
+    useEffect(() => {
+        const hasValues =
+            Boolean(String(formData.nbP).trim()) ||
+            Boolean(String(formData.nbOf).trim()) ||
+            Boolean(String(formData.amount).trim()) ||
+            Boolean(String(formData.comment).trim());
+
+        if (hasValues) {
+            saveDailyDraft(formData);
+        } else {
+            clearDailyDraft();
+        }
+    }, [formData]);
+
     const calculateAverageCost = () => {
         const patients = parseFloat(formData.nbP);
         const totalAmount = parseFloat(formData.amount);
@@ -121,10 +141,24 @@ const DailyReports = () => {
         if (name === "date") {
             hasUserEditedDateRef.current = true;
         }
+        setDraftRestored(false);
         setFormData((prev) => ({
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleClearDraft = () => {
+        clearDailyDraft();
+        setDraftRestored(false);
+        hasUserEditedDateRef.current = false;
+        setFormData({
+            date: formatDateInputValue(new Date()),
+            nbP: "",
+            nbOf: "",
+            amount: "",
+            comment: ""
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -166,6 +200,9 @@ const DailyReports = () => {
                 payload: submissionData
             });
 
+            clearDailyDraft();
+            setDraftRestored(false);
+            hasUserEditedDateRef.current = false;
             setFormData({
                 date: getNextWeekday(submissionData.date),
                 nbP: "",
@@ -199,12 +236,22 @@ const DailyReports = () => {
                         <p className="report-kicker">Facture journalière</p>
                         <h1 className="report-title">Enregistrer une facture</h1>
                         <p className="report-subtitle">
-                            Saisissez les détails de la facture journalière pour enregistrer l'activité du jour.
+                            Saisissez les détails de la facture journalière. Vos saisies en cours sont sauvegardées localement en brouillon.
                         </p>
                     </div>
                 </header>
 
                 <main className="form-card">
+                    {draftRestored && (
+                        <div className="draft-banner" role="status">
+                            <span>Brouillon local restauré automatiquement.</span>
+                            <button type="button" className="draft-clear-btn" onClick={handleClearDraft}>
+                                <RotateCcw size={14} aria-hidden="true" />
+                                <span>Effacer</span>
+                            </button>
+                        </div>
+                    )}
+
                     <form className="report-form" onSubmit={handleSubmit} noValidate>
                         <div className="form-grid">
                             <div className="form-group">

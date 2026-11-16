@@ -1,6 +1,8 @@
 const CACHE_INVOICES_KEY = "tatero_offline_invoices_v1";
 const CACHE_PROFILE_KEY = "tatero_offline_profile_v1";
 const OFFLINE_QUEUE_KEY = "tatero_offline_queue_v1";
+const OFFLINE_META_KEY = "tatero_offline_meta_v1";
+const DAILY_DRAFT_KEY = "tatero_daily_draft_v1";
 
 export const OFFLINE_CHANGE_EVENT = "tatero:offline-change";
 export const OFFLINE_SYNC_COMPLETE_EVENT = "tatero:sync-complete";
@@ -41,6 +43,16 @@ const writeJson = (key, value, storage) => {
     }
 };
 
+const removeItem = (key, storage) => {
+    const store = getStorage(storage);
+    if (!store) return;
+    try {
+        store.removeItem(key);
+    } catch {
+        // Ignore storage errors
+    }
+};
+
 const getInvoiceKey = (invoice) => String(invoice?._id ?? invoice?.id ?? "");
 const toDateKey = (value) => String(value || "").slice(0, 10);
 
@@ -54,6 +66,24 @@ const sortInvoicesDesc = (list) =>
     });
 
 export const isOfflineTempId = (id) => String(id || "").startsWith("offline-");
+
+export const getOfflineMeta = (storage) => {
+    const meta = readJson(OFFLINE_META_KEY, {}, storage);
+    return meta && typeof meta === "object" ? meta : {};
+};
+
+export const setLastSyncedAt = (isoString = new Date().toISOString(), storage) => {
+    const meta = getOfflineMeta(storage);
+    const nextMeta = { ...meta, lastSyncedAt: isoString };
+    writeJson(OFFLINE_META_KEY, nextMeta, storage);
+    emitWindowEvent(OFFLINE_CHANGE_EVENT, {
+        pendingCount: getPendingCount(storage),
+        lastSyncedAt: isoString
+    });
+    return nextMeta;
+};
+
+export const getLastSyncedAt = (storage) => getOfflineMeta(storage).lastSyncedAt || null;
 
 export const readCachedInvoices = (storage) => {
     const list = readJson(CACHE_INVOICES_KEY, [], storage);
@@ -74,7 +104,10 @@ export const getPendingQueue = (storage) => {
 export const writePendingQueue = (queue, storage) => {
     const list = Array.isArray(queue) ? queue : [];
     writeJson(OFFLINE_QUEUE_KEY, list, storage);
-    emitWindowEvent(OFFLINE_CHANGE_EVENT, { pendingCount: list.length });
+    emitWindowEvent(OFFLINE_CHANGE_EVENT, {
+        pendingCount: list.length,
+        lastSyncedAt: getLastSyncedAt(storage)
+    });
     return list;
 };
 
@@ -180,16 +213,18 @@ export const enqueueCreateInvoice = (payload, storage) => {
 
 export const enqueueUpdateInvoice = (invoiceId, payload, existingInvoice = {}, storage) => {
     const idStr = String(invoiceId);
+    const cached = readCachedInvoices(storage);
+    const cachedOriginal = cached.find((inv) => getInvoiceKey(inv) === idStr) || existingInvoice;
+
     const updatedInvoice = {
-        ...existingInvoice,
+        ...cachedOriginal,
         ...payload,
-        _id: existingInvoice?._id ?? idStr,
-        id: existingInvoice?.id ?? idStr,
+        _id: cachedOriginal?._id ?? idStr,
+        id: cachedOriginal?.id ?? idStr,
         updatedAt: new Date().toISOString(),
         pendingSync: true
     };
 
-    const cached = readCachedInvoices(storage);
     const foundInCache = cached.some((inv) => getInvoiceKey(inv) === idStr);
     const nextCached = foundInCache
         ? cached.map((inv) => (getInvoiceKey(inv) === idStr ? updatedInvoice : inv))
@@ -212,6 +247,8 @@ export const enqueueUpdateInvoice = (invoiceId, payload, existingInvoice = {}, s
         return updatedInvoice;
     }
 
+    const previousOp = queue.find((op) => op.type === "update" && String(op.invoiceId) === idStr);
+    const previousInvoice = previousOp?.previousInvoice || cachedOriginal || null;
     const filteredQueue = queue.filter(
         (op) => !(op.type === "update" && String(op.invoiceId) === idStr)
     );
@@ -223,6 +260,7 @@ export const enqueueUpdateInvoice = (invoiceId, payload, existingInvoice = {}, s
                 type: "update",
                 invoiceId: idStr,
                 payload,
+                previousInvoice: previousInvoice ? { ...previousInvoice, pendingSync: false } : null,
                 createdAt: new Date().toISOString()
             }
         ],
@@ -235,6 +273,7 @@ export const enqueueUpdateInvoice = (invoiceId, payload, existingInvoice = {}, s
 export const enqueueDeleteInvoice = (invoiceId, storage) => {
     const idStr = String(invoiceId);
     const cached = readCachedInvoices(storage);
+    const deletedInvoice = cached.find((inv) => getInvoiceKey(inv) === idStr) || null;
     writeCachedInvoices(
         cached.filter((inv) => getInvoiceKey(inv) !== idStr),
         storage
@@ -249,6 +288,8 @@ export const enqueueDeleteInvoice = (invoiceId, storage) => {
         return;
     }
 
+    const previousOp = queue.find((op) => String(op.invoiceId) === idStr);
+    const snapshot = previousOp?.previousInvoice || deletedInvoice;
     const filteredQueue = queue.filter((op) => String(op.invoiceId) !== idStr);
     writePendingQueue(
         [
@@ -257,6 +298,7 @@ export const enqueueDeleteInvoice = (invoiceId, storage) => {
                 queueId: `q-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
                 type: "delete",
                 invoiceId: idStr,
+                previousInvoice: snapshot ? { ...snapshot, pendingSync: false } : null,
                 createdAt: new Date().toISOString()
             }
         ],
@@ -264,17 +306,171 @@ export const enqueueDeleteInvoice = (invoiceId, storage) => {
     );
 };
 
-export const clearOfflineUserCache = (storage) => {
-    const store = getStorage(storage);
-    if (!store) return;
-    try {
-        store.removeItem(CACHE_INVOICES_KEY);
-        store.removeItem(CACHE_PROFILE_KEY);
-        store.removeItem(OFFLINE_QUEUE_KEY);
-    } catch {
-        // Ignore storage errors
+export const cancelQueuedOperation = (queueId, storage) => {
+    const queue = getPendingQueue(storage);
+    const target = queue.find((op) => op.queueId === queueId);
+    if (!target) return false;
+
+    const nextQueue = queue.filter((op) => op.queueId !== queueId);
+    const cached = readCachedInvoices(storage);
+
+    if (target.type === "create") {
+        writeCachedInvoices(
+            cached.filter((inv) => getInvoiceKey(inv) !== String(target.invoiceId)),
+            storage
+        );
+    } else if (target.type === "update") {
+        const restored = target.previousInvoice
+            ? { ...target.previousInvoice, pendingSync: false }
+            : null;
+        if (restored) {
+            writeCachedInvoices(
+                cached.map((inv) =>
+                    getInvoiceKey(inv) === String(target.invoiceId) ? restored : inv
+                ),
+                storage
+            );
+        } else {
+            writeCachedInvoices(
+                cached.map((inv) =>
+                    getInvoiceKey(inv) === String(target.invoiceId)
+                        ? { ...inv, pendingSync: false }
+                        : inv
+                ),
+                storage
+            );
+        }
+    } else if (target.type === "delete" && target.previousInvoice) {
+        const idStr = String(target.invoiceId);
+        const alreadyPresent = cached.some((inv) => getInvoiceKey(inv) === idStr);
+        if (!alreadyPresent) {
+            writeCachedInvoices(
+                [{ ...target.previousInvoice, pendingSync: false }, ...cached],
+                storage
+            );
+        }
     }
-    emitWindowEvent(OFFLINE_CHANGE_EVENT, { pendingCount: 0 });
+
+    writePendingQueue(nextQueue, storage);
+    emitWindowEvent(OFFLINE_SYNC_COMPLETE_EVENT, { synced: 0, cancelled: true });
+    return true;
+};
+
+export const saveDailyDraft = (draft, storage) => {
+    if (!draft || typeof draft !== "object") return;
+    writeJson(
+        DAILY_DRAFT_KEY,
+        {
+            date: draft.date || "",
+            nbP: draft.nbP ?? "",
+            nbOf: draft.nbOf ?? "",
+            amount: draft.amount ?? "",
+            comment: draft.comment ?? "",
+            updatedAt: new Date().toISOString()
+        },
+        storage
+    );
+};
+
+export const loadDailyDraft = (storage) => {
+    const draft = readJson(DAILY_DRAFT_KEY, null, storage);
+    if (!draft || typeof draft !== "object") return null;
+    const hasContent =
+        Boolean(String(draft.nbP ?? "").trim()) ||
+        Boolean(String(draft.nbOf ?? "").trim()) ||
+        Boolean(String(draft.amount ?? "").trim()) ||
+        Boolean(String(draft.comment ?? "").trim());
+    return hasContent ? draft : null;
+};
+
+export const clearDailyDraft = (storage) => {
+    removeItem(DAILY_DRAFT_KEY, storage);
+};
+
+export const getOfflineStats = (storage) => ({
+    cachedCount: readCachedInvoices(storage).length,
+    pendingCount: getPendingCount(storage),
+    lastSyncedAt: getLastSyncedAt(storage),
+    hasDraft: Boolean(loadDailyDraft(storage))
+});
+
+export const exportOfflineBackupData = (storage) => ({
+    version: 1,
+    app: "Tatero",
+    exportedAt: new Date().toISOString(),
+    lastSyncedAt: getLastSyncedAt(storage),
+    profile: getCachedProfile(storage),
+    invoices: readCachedInvoices(storage),
+    pendingQueue: getPendingQueue(storage)
+});
+
+export const importOfflineBackupData = (backup, storage) => {
+    if (!backup || typeof backup !== "object") {
+        throw new Error("Fichier de sauvegarde invalide.");
+    }
+
+    const incomingInvoices = Array.isArray(backup)
+        ? backup
+        : Array.isArray(backup.invoices)
+            ? backup.invoices
+            : null;
+
+    if (!incomingInvoices) {
+        throw new Error("Aucune facture valide détectée dans cette sauvegarde.");
+    }
+
+    const validInvoices = incomingInvoices.filter(
+        (item) => item && typeof item === "object" && /^\d{4}-\d{2}-\d{2}/.test(String(item.date || ""))
+    );
+
+    const existing = readCachedInvoices(storage);
+    const byId = new Map();
+
+    existing.forEach((inv) => {
+        const key = getInvoiceKey(inv) || `${toDateKey(inv.date)}-${inv.amount}-${inv.nbP}`;
+        byId.set(key, inv);
+    });
+
+    let importedCount = 0;
+    validInvoices.forEach((inv, idx) => {
+        const key = getInvoiceKey(inv) || `import-${toDateKey(inv.date)}-${idx}`;
+        if (!byId.has(key)) {
+            importedCount += 1;
+        }
+        byId.set(key, { ...inv });
+    });
+
+    const existingQueue = getPendingQueue(storage);
+    let nextQueue = [...existingQueue];
+    if (Array.isArray(backup.pendingQueue)) {
+        const seenQueueIds = new Set(existingQueue.map((op) => op.queueId));
+        for (const op of backup.pendingQueue) {
+            if (op && typeof op === "object" && op.queueId && !seenQueueIds.has(op.queueId)) {
+                nextQueue.push(op);
+                seenQueueIds.add(op.queueId);
+            }
+        }
+    }
+
+    const merged = applyQueueToInvoices(Array.from(byId.values()), nextQueue);
+    writeCachedInvoices(merged, storage);
+    writePendingQueue(nextQueue, storage);
+    emitWindowEvent(OFFLINE_SYNC_COMPLETE_EVENT, { synced: 0, imported: importedCount });
+
+    return {
+        importedCount,
+        totalCached: merged.length,
+        pendingCount: nextQueue.length
+    };
+};
+
+export const clearOfflineUserCache = (storage) => {
+    removeItem(CACHE_INVOICES_KEY, storage);
+    removeItem(CACHE_PROFILE_KEY, storage);
+    removeItem(OFFLINE_QUEUE_KEY, storage);
+    removeItem(OFFLINE_META_KEY, storage);
+    removeItem(DAILY_DRAFT_KEY, storage);
+    emitWindowEvent(OFFLINE_CHANGE_EVENT, { pendingCount: 0, lastSyncedAt: null });
 };
 
 let activeSyncPromise = null;
@@ -382,6 +578,7 @@ export const syncOfflineQueue = async ({
         }
 
         if (synced > 0) {
+            setLastSyncedAt(new Date().toISOString(), storage);
             emitWindowEvent(OFFLINE_SYNC_COMPLETE_EVENT, { synced });
         }
 
