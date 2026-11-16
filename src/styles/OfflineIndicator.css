@@ -3,43 +3,38 @@
   left: 1rem;
   bottom: 1rem;
   z-index: 1150;
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem 0.9rem;
-  max-width: min(calc(100vw - 2rem), 460px);
-  padding: 0.65rem 0.9rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--card-bg);
+  gap: 0.45rem 0.6rem;
+  max-width: min(calc(100vw - 2rem), 360px);
+  padding: 0.42rem 0.6rem 0.42rem 0.72rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
   color: var(--text-main);
-  font-size: 0.8125rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  box-shadow: var(--shadow-hover);
+  box-shadow: var(--shadow-sm);
 }
 
-.offline-indicator.is-offline {
-  border-color: var(--warning-border);
-  background: var(--warning-bg);
+.offline-indicator.is-offline .offline-indicator-icon {
   color: var(--warning-text);
 }
 
-.offline-indicator.is-pending {
-  border-color: var(--border-strong);
-  background: var(--card-bg);
-  color: var(--text-main);
+.offline-indicator.is-pending .offline-indicator-icon {
+  color: var(--accent);
 }
 
-.offline-indicator.is-synced {
-  border-color: var(--success-border);
-  background: var(--success-bg);
+.offline-indicator.is-synced .offline-indicator-icon {
   color: var(--success-text);
 }
 
 .offline-indicator-main {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.42rem;
   min-width: 0;
 }
 
@@ -52,22 +47,26 @@
 }
 
 .offline-indicator-text {
-  line-height: 1.35;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .offline-indicator-actions {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 .offline-sync-btn {
-  min-height: 30px;
-  padding: 0.25rem 0.7rem;
+  min-height: 26px;
+  padding: 0.18rem 0.55rem;
   border-radius: 6px;
   background: var(--accent);
   color: var(--accent-contrast);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -83,33 +82,57 @@
   cursor: wait;
 }
 
+.offline-manage-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offline-manage-link:hover {
+  border-color: var(--control-border-hover);
+  background: var(--bg-muted);
+}
+
+.offline-dismiss-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offline-dismiss-btn:hover {
+  background: var(--bg-muted);
+  color: var(--text-main);
+}
+
 .offline-sync-btn:focus-visible,
-.offline-manage-link:focus-visible {
+.offline-manage-link:focus-visible,
+.offline-dismiss-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.offline-manage-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0.25rem 0.6rem;
-  border: 1px solid currentColor;
-  border-radius: 6px;
-  color: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.offline-manage-link:hover {
-  opacity: 0.85;
-}
-
 .offline-sync-error {
   width: 100%;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--error-text);
 }
 
@@ -124,10 +147,16 @@
 
 @media (max-width: 767px) {
   .offline-indicator {
-    left: 0.75rem;
+    left: auto;
     right: 0.75rem;
-    bottom: 72px;
-    max-width: none;
-    justify-content: space-between;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .offline-indicator.has-bottom-nav {
+    bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  .offline-indicator.no-bottom-nav {
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 }

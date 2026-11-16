@@ -26,7 +26,7 @@ const AppLayout = () => {
                 <Outlet />
             </main>
 
-            <OfflineIndicator />
+            <OfflineIndicator hasBottomNav={shouldShowNav} />
             <PWAInstallButton />
 
             {shouldShowNav && <BottomNav />}

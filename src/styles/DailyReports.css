@@ -84,7 +84,7 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.65rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: 6px;
   background: var(--card-bg);
   color: var(--text-main);
@@ -94,7 +94,7 @@
 }
 
 .draft-clear-btn:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   background: var(--bg-muted);
 }
 
@@ -159,7 +159,7 @@
   width: 100%;
   min-height: 42px;
   padding: 0.6rem 0.85rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   color: var(--text-muted);
@@ -179,7 +179,7 @@
   flex: 0 0 16px;
   width: 16px;
   height: 16px;
-  border: 1.5px solid var(--border-strong);
+  border: 1.5px solid var(--control-border);
   border-radius: 50%;
   background: var(--card-bg);
   transition:
@@ -188,8 +188,12 @@
 }
 
 .gender-option:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   color: var(--text-main);
+}
+
+.gender-option:hover .gender-option-indicator {
+  border-color: var(--control-border-hover);
 }
 
 .gender-option.selected {
@@ -227,7 +231,7 @@
 .form-group select {
   width: 100%;
   min-height: 42px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   background: var(--card-bg);
   color: var(--text-main);
   border-radius: var(--radius-sm);
@@ -248,7 +252,7 @@
 .form-group input:hover:not(:disabled):not(:read-only),
 .form-group textarea:hover:not(:disabled),
 .form-group select:hover:not(:disabled) {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
 }
 
 .form-group input:focus,

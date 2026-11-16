@@ -64,7 +64,7 @@
 .month-stepper {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   overflow: hidden;
@@ -104,7 +104,7 @@
 }
 
 .month-step-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: default;
 }
 
@@ -129,7 +129,7 @@
   width: 100%;
   min-height: 40px;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   color: var(--text-main);
@@ -142,7 +142,7 @@
 }
 
 .monthly-picker-control input[type="month"]:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
 }
 
 .monthly-picker-control input[type="month"]:focus-visible {
@@ -189,7 +189,7 @@
 }
 
 .action-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 

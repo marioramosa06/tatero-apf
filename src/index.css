@@ -17,11 +17,13 @@
 
   /* 30% Structural Borders & Typography */
   --border-color: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border-strong: #94a3b8;
+  --control-border: #8796ac;
+  --control-border-hover: #556377;
   --nav-border: #e2e8f0;
   --text-main: #0f172a;
   --text-muted: #475569;
-  --text-subtle: #64748b;
+  --text-subtle: #556377;
   --table-row-hover: #f8fafc;
 
   /* 10% Restrained Accent & Primary Actions */
@@ -46,10 +48,10 @@
   --error-text: #b91c1c;
   --success-bg: #f0fdf4;
   --success-border: #bbf7d0;
-  --success-text: #15803d;
+  --success-text: #166534;
   --warning-bg: #fffbeb;
   --warning-border: #fde68a;
-  --warning-text: #b45309;
+  --warning-text: #92400e;
 
   --focus-ring: rgba(15, 98, 88, 0.22);
 
@@ -75,11 +77,13 @@
     --nav-bg: rgba(11, 15, 23, 0.92);
 
     --border-color: #1f2937;
-    --border-strong: #334155;
+    --border-strong: #475569;
+    --control-border: #56667d;
+    --control-border-hover: #8091a8;
     --nav-border: #1f2937;
     --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --text-subtle: #64748b;
+    --text-muted: #a3b2c6;
+    --text-subtle: #8091a8;
     --table-row-hover: rgba(255, 255, 255, 0.03);
 
     --primary: #f8fafc;
@@ -199,7 +203,7 @@ button {
   width: fit-content;
   min-height: 36px;
   padding: 0.38rem 0.85rem 0.38rem 0.7rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   color: var(--text-main);
@@ -216,7 +220,7 @@ button {
 }
 
 .back-link:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   background: var(--bg-subtle);
   color: var(--accent);
 }

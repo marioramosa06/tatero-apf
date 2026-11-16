@@ -75,7 +75,7 @@
   width: 100%;
   min-height: 40px;
   padding: 0.5rem 0.85rem 0.5rem 2.35rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--bg-color);
   color: var(--text-main);
@@ -83,6 +83,14 @@
   transition:
     border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.invoices-search-field input::placeholder {
+  color: var(--text-subtle);
+}
+
+.invoices-search-field input:hover {
+  border-color: var(--control-border-hover);
 }
 
 .invoices-search-field input:focus {
@@ -101,7 +109,7 @@
 .invoices-filter-toggle {
   min-height: 36px;
   padding: 0.4rem 0.85rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   color: var(--text-muted);
@@ -116,7 +124,7 @@
 }
 
 .invoices-filter-toggle:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   color: var(--text-main);
 }
 
@@ -369,7 +377,7 @@
   gap: 0.35rem;
   min-height: 32px;
   padding: 0.3rem 0.65rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   background: var(--card-bg);
   color: var(--text-main);
@@ -384,7 +392,7 @@
 }
 
 .row-action-btn:hover {
-  border-color: var(--border-strong);
+  border-color: var(--control-border-hover);
   background: var(--bg-muted);
 }
 
@@ -428,9 +436,9 @@
   gap: 0.45rem;
   min-height: 42px;
   padding: 0.625rem 1.25rem;
-  border: 1px solid #dc2626;
+  border: 1px solid #b91c1c;
   border-radius: var(--radius-sm);
-  background: #dc2626;
+  background: #b91c1c;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -440,7 +448,8 @@
 }
 
 .danger-btn:hover:not(:disabled) {
-  background: #b91c1c;
+  border-color: #991b1b;
+  background: #991b1b;
 }
 
 .danger-btn:disabled {
