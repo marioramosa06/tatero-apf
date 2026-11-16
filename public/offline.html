@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f6258" />
+    <title>Hors ligne · Tatero | APF</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg-color: #f8fafc;
+        --bg-muted: #f1f5f9;
+        --card-bg: #ffffff;
+        --border-color: #e2e8f0;
+        --control-border: #8796ac;
+        --control-border-hover: #556377;
+        --text-main: #0f172a;
+        --text-muted: #475569;
+        --primary: #0f172a;
+        --primary-hover: #1e293b;
+        --primary-contrast: #ffffff;
+        --accent: #0f6258;
+        --accent-soft: #eef6f5;
+        --warning-bg: #fffbeb;
+        --warning-border: #fde68a;
+        --warning-text: #92400e;
+        --success-bg: #f0fdf4;
+        --success-border: #bbf7d0;
+        --success-text: #166534;
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg-color: #0b0f17;
+          --bg-muted: #161f2e;
+          --card-bg: #111827;
+          --border-color: #1f2937;
+          --control-border: #56667d;
+          --control-border-hover: #8091a8;
+          --text-main: #f8fafc;
+          --text-muted: #a3b2c6;
+          --primary: #f8fafc;
+          --primary-hover: #e2e8f0;
+          --primary-contrast: #0b0f17;
+          --accent: #34a89a;
+          --accent-soft: rgba(52, 168, 154, 0.12);
+          --warning-bg: rgba(180, 83, 9, 0.14);
+          --warning-border: rgba(251, 191, 36, 0.28);
+          --warning-text: #fcd34d;
+          --success-bg: rgba(21, 128, 61, 0.14);
+          --success-border: rgba(74, 222, 128, 0.28);
+          --success-text: #86efac;
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem 1rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.55;
+      }
+
+      .offline-card {
+        width: min(100%, 480px);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 2.5rem 2rem;
+        box-shadow: var(--shadow-sm);
+        text-align: center;
+      }
+
+      .offline-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--text-main);
+      }
+
+      .offline-brand img {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+      }
+
+      .offline-icon-box {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 1.15rem;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-color);
+        color: var(--accent);
+      }
+
+      .offline-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.28rem 0.65rem;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
+        color: var(--warning-text);
+        margin-bottom: 0.9rem;
+      }
+
+      .offline-status.is-online {
+        background: var(--success-bg);
+        border-color: var(--success-border);
+        color: var(--success-text);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 4vw, 1.8rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-main);
+      }
+
+      p.offline-message {
+        margin: 0.75rem auto 1.5rem;
+        max-width: 360px;
+        font-size: 0.94rem;
+        color: var(--text-muted);
+      }
+
+      .offline-tips {
+        margin: 0 0 1.75rem;
+        padding: 0.9rem 1rem;
+        border-radius: 10px;
+        background: var(--bg-muted);
+        border: 1px solid var(--border-color);
+        text-align: left;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .offline-tips strong {
+        display: block;
+        color: var(--text-main);
+        margin-bottom: 0.35rem;
+      }
+
+      .offline-tips ul {
+        margin: 0;
+        padding-left: 1.15rem;
+      }
+
+      .offline-tips li + li {
+        margin-top: 0.25rem;
+      }
+
+      .offline-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.65rem;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 42px;
+        padding: 0.6rem 1.15rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .btn-primary {
+        border: none;
+        background: var(--primary);
+        color: var(--primary-contrast);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-hover);
+      }
+
+      .btn-secondary {
+        background: var(--card-bg);
+        color: var(--text-main);
+        border: 1px solid var(--control-border);
+      }
+
+      .btn-secondary:hover {
+        border-color: var(--control-border-hover);
+        background: var(--bg-muted);
+      }
+
+      .btn-primary:focus-visible,
+      .btn-secondary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="offline-card">
+      <div class="offline-brand">
+        <img src="/icon.svg" alt="" width="24" height="24" />
+        <span>Tatero · APF</span>
+      </div>
+
+      <div class="offline-icon-box" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 2l20 20" />
+          <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+          <path d="M5 13a10 10 0 0 1 11.42-1.8" />
+          <path d="M1.42 9.5a15 15 0 0 1 6.83-3.5" />
+          <path d="M12 20h.01" />
+        </svg>
+      </div>
+
+      <div id="offline-status-badge" class="offline-status" role="status">
+        Connexion hors ligne
+      </div>
+
+      <h1>Vous êtes hors ligne</h1>
+      <p class="offline-message">
+        Cette page n'a pas pu être chargée sans connexion Internet. Vérifiez votre réseau puis réessayez.
+      </p>
+
+      <div class="offline-tips">
+        <strong>Ce que vous pouvez faire hors ligne :</strong>
+        <ul>
+          <li>Ouvrir l'accueil pour accéder à vos pages déjà enregistrées.</li>
+          <li>Saisir vos factures journalières localement ; elles seront synchronisées au retour du réseau.</li>
+        </ul>
+      </div>
+
+      <div class="offline-actions">
+        <button id="offline-retry-btn" type="button" class="btn-primary">
+          Réessayer
+        </button>
+        <a href="/" class="btn-secondary">
+          Retour à l'accueil
+        </a>
+      </div>
+    </main>
+
+    <script src="/offline.js" defer></script>
+  </body>
+</html>

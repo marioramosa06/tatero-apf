@@ -12,6 +12,8 @@ export default defineConfig({
         'favicon-alt.svg',
         'icon.svg',
         'apple-touch-icon.png',
+        'offline.html',
+        'offline.js',
         'assets/aistudio/*.png',
       ],
       manifest: {
@@ -51,6 +53,24 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         runtimeCaching: [
+          {
+            urlPattern: ({ request, url, sameOrigin }) =>
+              sameOrigin &&
+              request.mode === 'navigate' &&
+              /\.[a-z0-9]+$/i.test(url.pathname) &&
+              !url.pathname.startsWith('/api/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'offline-fallback-pages',
+              networkTimeoutSeconds: 3,
+              precacheFallback: {
+                fallbackURL: '/offline.html',
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
           {
             urlPattern: ({ url, sameOrigin }) =>
               sameOrigin && !url.pathname.startsWith('/api/'),

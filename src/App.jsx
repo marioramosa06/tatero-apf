@@ -10,6 +10,7 @@ import About from './pages/About'
 import SignIn from './pages/SingIn'
 import SignUp from './pages/SignUp'
 import Profile from './pages/Profile'
+import OfflineFallback from './pages/OfflineFallback'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './contexts/AuthContext'
@@ -30,6 +31,7 @@ function App() {
             <Route path='/about' element={<About />} />
             <Route path='/signin' element={<SignIn />} />
             <Route path='/signup' element={<SignUp />} />
+            <Route path='/offline' element={<OfflineFallback />} />
             <Route path='*' element={<NotFound />} />
           </Route>
         </Routes>

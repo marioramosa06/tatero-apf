@@ -1,0 +1,238 @@
+.offline-fallback-page {
+  min-height: 75vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem 3rem;
+}
+
+.offline-fallback-card {
+  width: min(100%, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.offline-fallback-icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.15rem;
+  color: var(--accent);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.offline-fallback-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.offline-fallback-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.85rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.offline-fallback-status.is-online {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.offline-fallback-card h1 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: clamp(1.45rem, 4vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.offline-fallback-message {
+  max-width: 390px;
+  margin: 0.75rem 0 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.offline-fallback-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 1.35rem;
+  padding: 0.85rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.offline-fallback-stat dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.offline-fallback-stat dd {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.offline-fallback-actions {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.offline-fallback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 42px;
+  padding: 0.6rem 1.15rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offline-fallback-btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+
+.offline-fallback-btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.offline-fallback-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.offline-fallback-btn-secondary {
+  background: var(--card-bg);
+  color: var(--text-main);
+  border: 1px solid var(--control-border);
+}
+
+.offline-fallback-btn-secondary:hover {
+  border-color: var(--control-border-hover);
+  background: var(--bg-muted);
+}
+
+.offline-fallback-btn:focus-visible,
+.offline-fallback-shortcut:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.offline-fallback-shortcuts {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.offline-fallback-shortcuts-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.offline-fallback-shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.offline-fallback-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.offline-fallback-shortcut:hover {
+  border-color: var(--control-border-hover);
+  background: var(--bg-muted);
+  color: var(--accent);
+}
+
+.offline-fallback-shortcut svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.offline-fallback-btn .spin {
+  animation: offline-fallback-spin 1s linear infinite;
+}
+
+@keyframes offline-fallback-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 520px) {
+  .offline-fallback-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .offline-fallback-summary,
+  .offline-fallback-shortcut-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offline-fallback-actions {
+    flex-direction: column;
+  }
+
+  .offline-fallback-btn {
+    width: 100%;
+  }
+}

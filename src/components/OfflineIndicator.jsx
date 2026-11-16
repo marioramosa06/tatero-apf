@@ -34,6 +34,7 @@ const OfflineIndicator = ({ hasBottomNav = false }) => {
             : "is-synced";
 
     const showManageLink = isAuthenticated && location.pathname !== "/profile" && (!isOnline || pendingCount > 0);
+    const showOfflinePageLink = !isOnline && !showManageLink && location.pathname !== "/offline";
     const statusLabel = !isOnline
         ? pendingCount > 0
             ? `Hors ligne · ${pendingCount} en attente`
@@ -81,6 +82,11 @@ const OfflineIndicator = ({ hasBottomNav = false }) => {
                 {showManageLink && (
                     <Link to="/profile#offline" className="offline-manage-link">
                         Gérer
+                    </Link>
+                )}
+                {showOfflinePageLink && (
+                    <Link to="/offline" className="offline-manage-link">
+                        Infos
                     </Link>
                 )}
                 <button
