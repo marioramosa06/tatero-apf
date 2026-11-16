@@ -156,6 +156,10 @@
   color: var(--text-muted);
 }
 
+.modal-body .offline-cache-note {
+  margin-top: 0.75rem;
+}
+
 @media (max-width: 900px) {
   .about-grid {
     grid-template-columns: 1fr;

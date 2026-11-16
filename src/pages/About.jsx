@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import "../styles/About.css";
 import Footer from "../components/Footer";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 const API_BASE_URL = (
     import.meta.env.VITE_API_URL || "https://api-tatero-apf.vercel.app/api"
 ).replace(/\/+$/, "");
 
 const About = () => {
+    const { isOnline } = useOnlineStatus();
     const [isContactOpen, setIsContactOpen] = useState(false);
     const [contactSubmitted, setContactSubmitted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -238,6 +240,12 @@ const About = () => {
                                             ></textarea>
                                         </div>
                                     </div>
+
+                                    {!isOnline && (
+                                        <div className="offline-cache-note" role="status">
+                                            <span>Mode hors ligne : une connexion Internet est requise pour envoyer un message.</span>
+                                        </div>
+                                    )}
 
                                     {contactError && <div className="alert error" role="alert">{contactError}</div>}
 

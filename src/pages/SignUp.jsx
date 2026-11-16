@@ -13,6 +13,7 @@ import {
 import "../styles/DailyReports.css";
 import Footer from "../components/Footer";
 import PasswordInput from "../components/PasswordInput";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 const getFriendlyAuthError = (message) => {
     const normalized = String(message || "").trim();
@@ -59,6 +60,7 @@ const getFriendlyAuthError = (message) => {
 
 const SignUp = () => {
     const navigate = useNavigate();
+    const { isOnline } = useOnlineStatus();
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [isPending, setIsPending] = useState(false);
@@ -167,6 +169,11 @@ const SignUp = () => {
                 </header>
 
                 <main className="form-card">
+                    {!isOnline && (
+                        <div className="offline-cache-note" role="status">
+                            <span>Mode hors ligne : une connexion Internet est requise pour créer un compte.</span>
+                        </div>
+                    )}
                     <form className="report-form" onSubmit={handleSubmit} noValidate>
                         <div className="form-grid">
                             <div className="form-group">

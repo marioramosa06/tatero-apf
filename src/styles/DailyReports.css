@@ -113,6 +113,10 @@
   font-weight: 500;
 }
 
+.form-card > .offline-cache-note {
+  margin-bottom: 1rem;
+}
+
 .report-form {
   display: flex;
   flex-direction: column;
