@@ -189,21 +189,26 @@ const SignUp = () => {
                                     <Users2 className="field-icon" aria-hidden="true" />
                                     Genre
                                 </span>
-                                <div className="gender-chip-group" role="group" aria-labelledby="gender-label">
+                                <div className="gender-option-group" role="radiogroup" aria-labelledby="gender-label">
                                     {[
                                         { value: "homme", label: "Homme" },
                                         { value: "femme", label: "Femme" }
-                                    ].map(({ value, label }) => (
-                                        <button
-                                            key={value}
-                                            type="button"
-                                            className={`gender-chip ${formData.gender === value ? "selected" : ""}`}
-                                            aria-pressed={formData.gender === value}
-                                            onClick={() => setFormData((prev) => ({ ...prev, gender: value }))}
-                                        >
-                                            {label}
-                                        </button>
-                                    ))}
+                                    ].map(({ value, label }) => {
+                                        const isSelected = formData.gender === value;
+                                        return (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                className={`gender-option${isSelected ? " selected" : ""}`}
+                                                onClick={() => setFormData((prev) => ({ ...prev, gender: value }))}
+                                            >
+                                                <span className="gender-option-indicator" aria-hidden="true" />
+                                                <span>{label}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

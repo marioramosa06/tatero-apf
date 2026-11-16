@@ -13,14 +13,21 @@ import Footer from "../components/Footer";
 import useAuth from "../hooks/useAuth";
 
 const Homepage = () => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const initials = user?.name
+        ?.split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("")
+        .toUpperCase();
 
     return (
         <div className="homepage-shell">
             <header className="homepage-topbar">
                 <div className="homepage-topbar-inner">
                     <Link to="/" className="homepage-wordmark">
-                        Tatero
+                        Tatero <span aria-hidden="true">·</span> <span className="homepage-wordmark-suffix">APF</span>
                     </Link>
 
                     <div className="homepage-topbar-action">
@@ -28,9 +35,14 @@ const Homepage = () => {
                             À propos
                         </Link>
                         {isAuthenticated && (
-                            <Link to="/profile" className="homepage-top-btn">
-                                <UserRound size={15} aria-hidden="true" />
-                                <span>Profil</span>
+                            <Link to="/profile" className="homepage-top-btn" aria-label="Mon profil" title="Mon profil">
+                                <span className="homepage-top-avatar" aria-hidden="true">
+                                    {initials || <UserRound size={16} />}
+                                </span>
+                                <span className="homepage-top-btn-icon" aria-hidden="true">
+                                    <UserRound size={15} />
+                                </span>
+                                <span className="homepage-top-btn-label">Profil</span>
                             </Link>
                         )}
                     </div>
@@ -39,9 +51,6 @@ const Homepage = () => {
 
             <div className="homepage-container">
                 <section className="homepage-hero" aria-labelledby="homepage-hero-title">
-                    <p className="homepage-kicker">
-                        Tatero <span aria-hidden="true">·</span> APF
-                    </p>
                     <h1 id="homepage-hero-title" className="homepage-title">
                         Une gestion plus simple, <span>un suivi plus clair.</span>
                     </h1>

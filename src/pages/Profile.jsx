@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
+    ArrowLeft,
     BriefcaseBusiness,
     CalendarDays,
     Download,
@@ -208,6 +209,9 @@ const Profile = () => {
         <>
             <div className="profile-page report-container">
                 <header className="report-header profile-header">
+                    <Link to="/dashboard" className="back-link">
+                        <ArrowLeft className="back-icon" aria-hidden="true" /> Retour au tableau de bord
+                    </Link>
                     <div className="header-title-wrapper">
                         <p className="report-kicker">Espace personnel</p>
                         <h1 className="report-title">Mon profil</h1>
